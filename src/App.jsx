@@ -7,14 +7,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
-      <header className="flex items-center justify-between p-4">
-    
-     
-      </header>
-
       <main className="p-6">
-        
-
         <button
           onClick={() => setOpen(true)}
           className="mt-6 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 ring-1 ring-white/10"
