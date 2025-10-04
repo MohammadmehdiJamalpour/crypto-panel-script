@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
+import { XMarkIcon } from "@heroicons/react/24/outline"; // <- add this
 
 export default function Modal({ open, onClose, title = "Modal title", children }) {
   return (
@@ -30,13 +31,26 @@ export default function Modal({ open, onClose, title = "Modal title", children }
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md rounded-2xl bg-gray-900 text-white p-6 shadow-xl ring-1 ring-white/10">
-                <Dialog.Title className="text-lg font-semibold">{title}</Dialog.Title>
+              <Dialog.Panel className="relative w-full max-w-md rounded-2xl bg-gray-900 text-white px-6 py-3 shadow-xl ring-1 ring-white/10">
+                {/* Top-right close */}
+                <div className="flex justify-between items-center ">
+                <Dialog.Title className="text-lg text-center w-11/12  font-semibold">{title}</Dialog.Title>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close"
+                  className=" inline-flex items-center justify-center duration-300 bg-white/10 rounded-full p-1.5 text-white/80 hover:text-white hover:bg-white/30 focus:outline-none focus:ring-2 focus:ring-white/30"
+                >
+                  <XMarkIcon className="h-5 w-5" aria-hidden="true" />
+                  <span className="sr-only">Close</span>
+                </button>
+               </div>
                 <div className="mt-4">{children}</div>
+
                 <div className="mt-6 flex justify-end gap-2">
                   <button
                     onClick={onClose}
-                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 ring-1 ring-white/20"
+                    className="px-3 py-1.5 rounded-lg duration-300 bg-white/10 hover:bg-white/20 ring-1 ring-white/20"
                   >
                     Close
                   </button>
