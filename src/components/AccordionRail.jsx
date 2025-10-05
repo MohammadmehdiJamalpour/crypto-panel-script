@@ -1,60 +1,39 @@
 import React, {
-  Children,
-  cloneElement,
   forwardRef,
   useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
   useState,
 } from "react";
+import AccordionItemsBody from "./AccordionItemsBody.jsx";
 
 /**
  * DUMMY DATA SHAPE (no heights here)
  * ----------------------------------------------------------
  * const SECTIONS = [
- *   {
- *     id: "power",
- *     title: "Power Usage",
- *     icon: <BoltIcon />,
- *     defaultOpen: true,
- *     items: [
- *       { id: "status" },
- *       { id: "usage" },
- *       { id: "overhead" },
- *     ],
- *   },
- *   {
- *     id: "security",
- *     title: "Open Security Measures",
- *     icon: <LockClosedIcon />,
- *     items: [{ id: "rules" }, { id: "alerts" }],
- *   },
- *   {
- *     id: "password",
- *     title: "Set a New Password",
- *     icon: <KeyIcon />,
- *     items: [{ id: "form" }],
- *   },
+ *   { id: "power", title: "Power Usage", icon: <BoltIcon/>, defaultOpen: true,
+ *     items: [{ id: "status" }, { id: "usage" }, { id: "overhead" }] },
+ *   { id: "security", title: "Open Security Measures", icon: <LockClosedIcon/>,
+ *     items: [{ id: "rules" }, { id: "alerts" }] },
+ *   { id: "password", title: "Set a New Password", icon: <KeyIcon/>,
+ *     items: [{ id: "form" }] },
  * ];
  * ----------------------------------------------------------
  */
 
-/* ---------- tiny classnames helper ---------- */
+/* tiny classnames helper */
 function cx(...parts) {
   return parts.flat().filter(Boolean).join(" ");
 }
 
-/* ---------- Smooth height (0 <-> auto) ---------- */
+/* Smooth height (0 <-> auto) */
 const SmoothCollapse = forwardRef(function SmoothCollapse(
   { open, children, duration = 200, easing = "ease-out", className = "" },
   ref
 ) {
-  const innerRef = useRef(null);
+  const innerRef = React.useRef(null);
   const [h, setH] = useState(open ? "auto" : 0);
   const [auto, setAuto] = useState(open);
 
-  useLayoutEffect(() => {
+  React.useLayoutEffect(() => {
     const el = innerRef.current;
     if (!el) return;
     let frame;
@@ -95,40 +74,44 @@ const SmoothCollapse = forwardRef(function SmoothCollapse(
   );
 });
 
-/* ---------- Item wrapper (fixed default height here) ---------- */
+/* Item wrapper (fixed default height 68px; NO blue bg on items) */
 export const AccordionItem = forwardRef(function AccordionItem(
   {
     children,
     className = "",
     decorated = true,
     padding = "0",
+    // neutral background always (items never switch to blue)
     bgClass = "bg-white/[0.05]",
     baseRingClass = "ring-1 ring-white/10",
-    /** you can override, but by default each option is 68px tall */
-    optionHeight = 68,
-    /** optional overrides if ever needed */
+    optionHeight = 68,   // default fixed height
     height,
     minHeight,
     width,
     style,
-    /** internal */
-    _open = false,
+    _open = false,       // internal
   },
   ref
 ) {
   const mergedStyle = {
-    // fixed height unless you explicitly override:
     ...(height == null && minHeight == null ? { height: optionHeight } : null),
     ...(width != null ? { width } : null),
     ...(height != null ? { height } : null),
     ...(minHeight != null ? { minHeight } : null),
     ...style,
-    ...(_open ? { borderColor: "var(--rail)" } : null),
   };
+
+  const borderCls = _open
+    ? "border border-[color:var(--rail)]"
+    : "border-0";
 
   if (!decorated) {
     return (
-      <div ref={ref} className={cx("relative", className)} style={mergedStyle}>
+      <div
+        ref={ref}
+        className={cx("relative rounded-2xl", bgClass, borderCls, className)}
+        style={mergedStyle}
+      >
         {children}
       </div>
     );
@@ -139,11 +122,11 @@ export const AccordionItem = forwardRef(function AccordionItem(
       ref={ref}
       className={cx(
         "relative rounded-2xl",
-        bgClass,
+        bgClass,            // <-- stays neutral whether open or closed
         padding,
         baseRingClass,
-        className,
-        _open && "border"
+        borderCls,
+        className
       )}
       style={mergedStyle}
     >
@@ -152,55 +135,7 @@ export const AccordionItem = forwardRef(function AccordionItem(
   );
 });
 
-/* ---------- measure stack geometry for rail/elbows ---------- */
-function useRailGeometry({ bodyRef, stackRef, itemRefs, open }) {
-  const [stackTop, setStackTop] = useState(0);
-  const [stackH, setStackH] = useState(0);
-  const [midYs, setMidYs] = useState([]);
-
-  useLayoutEffect(() => {
-    let frame;
-    const measure = () => {
-      if (!bodyRef.current || !stackRef.current) return;
-      const bodyRect = bodyRef.current.getBoundingClientRect();
-      const stackRect = stackRef.current.getBoundingClientRect();
-
-      setStackTop(stackRect.top - bodyRect.top);
-      setStackH(stackRect.height);
-
-      const mids = itemRefs.current.map((r) => {
-        const el = r.current;
-        if (!el) return 0;
-        const rect = el.getBoundingClientRect();
-        return rect.top - stackRect.top + rect.height / 2;
-      });
-      setMidYs(mids);
-    };
-
-    const schedule = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(measure);
-    };
-
-    schedule();
-
-    const ro = new ResizeObserver(schedule);
-    if (bodyRef.current) ro.observe(bodyRef.current);
-    if (stackRef.current) ro.observe(stackRef.current);
-    itemRefs.current.forEach((r) => r.current && ro.observe(r.current));
-    window.addEventListener("resize", schedule);
-
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", schedule);
-      cancelAnimationFrame(frame);
-    };
-  }, [open, bodyRef, stackRef, itemRefs]);
-
-  return { stackTop, stackH, midYs };
-}
-
-/* ---------- Single section with rail body ---------- */
+/* Single section (HEADER gets blue-ish bg when open; items do NOT) */
 export function AccordionSection({
   title = "Section",
   icon,
@@ -209,12 +144,12 @@ export function AccordionSection({
   onToggle,
   size = "md",                    // "sm" | "md"
 
-  // Rail/connector tuning
+  // Rail/connector tuning (unchanged defaults)
   gap = 12,
   railOffset = 12,
   elbowLen = 24,
   elbowRadius = 10,
-  railStroke = 1.5,               // ≈ 1/5
+  railStroke = 1.5,               // ~1/5
 
   // Single source of truth for accent color (rail + open borders)
   accentColor = "rgb(96 165 250 / 0.35)",
@@ -222,6 +157,9 @@ export function AccordionSection({
   // Behavior
   highlightHeaderOnOpen = true,
   decorateChildrenByDefault = true,
+
+  // blue-ish header bg ONLY when open
+  openHeaderBgClass = "bg-blue-500/[0.08] hover:bg-blue-500/[0.12]",
 }) {
   const uid = useId();
   const [open, setOpen] = useState(defaultOpen);
@@ -231,24 +169,22 @@ export function AccordionSection({
     md: { pad: "px-4 py-4", bubble: "h-8 w-8", title: "text-base" },
   }[size];
 
-  const bodyRef = useRef(null);
-  const stackRef = useRef(null);
-
-  const itemsArr = useMemo(() => Children.toArray(children), [children]);
-  const itemRefs = useRef([]);
-  if (itemRefs.current.length !== itemsArr.length) {
-    itemRefs.current = itemsArr.map((_, i) => itemRefs.current[i] ?? React.createRef());
-  }
-
-  const { stackTop, stackH, midYs } = useRailGeometry({
-    bodyRef,
-    stackRef,
-    itemRefs,
+  const overlayProps = {
     open,
-  });
+    gap,
+    railOffset,
+    elbowLen,
+    elbowRadius,
+    railStroke,
+    decorateChildrenByDefault,
+  };
 
-  const overlayW = railOffset + elbowLen;
-  const padLeft = overlayW + 8;
+  const closedHeaderBgClass = "bg-white/[0.05] hover:bg-white/[0.07]";
+  const headerBgClass = open ? openHeaderBgClass : closedHeaderBgClass;
+
+  const headerBorderCls = open
+    ? "border border-[color:var(--rail)]"
+    : "border-0";
 
   return (
     <section className="w-full" style={{ "--rail": accentColor }}>
@@ -265,12 +201,12 @@ export function AccordionSection({
         }}
         className={cx(
           "w-full flex items-center gap-3 rounded-2xl",
-          "bg-white/[0.05] hover:bg-white/[0.07] py-4 text-white/90",
+          headerBgClass, // <-- blue-ish when open
+          "py-4 text-white/90",
           "ring-1 duration-300 transition-all ring-blue-600/30 focus:outline-none focus:ring-1 focus:ring-blue-500/80",
           sizes.pad,
-          open && highlightHeaderOnOpen && "border"
+          headerBorderCls // <-- border persists while open
         )}
-        style={open && highlightHeaderOnOpen ? { borderColor: "var(--rail)" } : undefined}
       >
         <span className={cx("shrink-0 grid place-items-center rounded-2xl bg-white/10 ring-1 ring-white/10", sizes.bubble)}>
           {icon ?? <span className="h-1.5 w-1.5 rounded-full bg-white/70" />}
@@ -289,94 +225,17 @@ export function AccordionSection({
         </span>
       </button>
 
-      {/* Body (overlay clipped to the stack only) */}
+      {/* Body (smooth collapse) */}
       <SmoothCollapse open={open} className="mt-3" aria-hidden={!open}>
-        <div
-          ref={bodyRef}
-          className="relative"
-          id={`${uid}-panel`}
-          role="region"
-          aria-label={`${title} details`}
-        >
-          {/* Items stack */}
-          <div
-            ref={stackRef}
-            className="flex flex-col"
-            style={{ gap, paddingLeft: padLeft }}
-          >
-            {itemsArr.map((child, i) =>
-              cloneElement(child, {
-                ref: itemRefs.current[i],
-                _open: open,
-                ...(child.props.decorated === undefined && decorateChildrenByDefault
-                  ? { decorated: true }
-                  : null),
-              })
-            )}
-          </div>
-
-          {/* Overlay: rail + elbows (stack area only) */}
-          <svg
-            aria-hidden
-            className="pointer-events-none absolute"
-            style={{ left: 0, top: stackTop, width: overlayW, height: Math.max(stackH, 1) }}
-            viewBox={`0 0 ${overlayW} ${Math.max(stackH, 1)}`}
-          >
-            {(() => {
-              const H = Math.max(stackH, 1);
-              const R = elbowRadius;
-
-              // rail ends at the start of the last elbow (no tail)
-              let railEndY = H;
-              if (midYs.length > 0) {
-                const last = midYs[midYs.length - 1];
-                const lastCy = Math.max(R, Math.min(H - R, last));
-                railEndY = Math.max(0, Math.min(H, lastCy - R));
-              }
-
-              return (
-                <>
-                  {/* vertical rail */}
-                  <path
-                    d={`M ${railOffset} 0 V ${railEndY}`}
-                    fill="none"
-                    stroke="var(--rail)"
-                    strokeWidth={railStroke}
-                    strokeLinecap="round"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                  {/* elbows (no overlap with rail) */}
-                  {midYs.map((y, idx) => {
-                    const cy = Math.max(R, Math.min(H - R, y));
-                    const d = [
-                      `M ${railOffset} ${cy - R}`,
-                      `a ${R} ${R} 0 0 0 ${R} ${R}`,
-                      `h ${Math.max(0, elbowLen - R)}`,
-                    ].join(" ");
-                    return (
-                      <path
-                        key={idx}
-                        d={d}
-                        fill="none"
-                        stroke="var(--rail)"
-                        strokeWidth={railStroke}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        vectorEffect="non-scaling-stroke"
-                      />
-                    );
-                  })}
-                </>
-              );
-            })()}
-          </svg>
+        <div id={`${uid}-panel`} role="region" aria-label={`${title} details`}>
+          <AccordionItemsBody {...overlayProps}>{children}</AccordionItemsBody>
         </div>
       </SmoothCollapse>
     </section>
   );
 }
 
-/* ---------- Container for multiple sections ---------- */
+/* Container for multiple sections */
 export default function Accordion({ children, className = "", gap = "md" }) {
   const gapCls = gap === "sm" ? "space-y-2" : gap === "md" ? "space-y-3" : "space-y-0";
   return <div className={cx(gapCls, className)}>{children}</div>;
