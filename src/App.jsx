@@ -25,7 +25,7 @@ const Block = ({ title }) => (
 export default function App() {
   return (
     <AppShell>
-      <div className="mx-auto max-w-xl space-y-6 p-6">
+      <div className="mx-auto container max-w-md space-y-6 p-6">
         <Accordion>
           <AccordionSection
             title="Power Usage"
