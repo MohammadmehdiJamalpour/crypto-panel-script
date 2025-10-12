@@ -6,3 +6,27 @@
   /* #040B23 → rgb(4 11 35) */
   --primary-rgb: 4 11 35;
 }
+@layer utilities {
+  /* Thin, rounded scrollbar with primary at 20% */
+  .thin-scrollbar {
+    /* Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--primary-rgb) / 0.4) transparent;
+  }
+
+  /* WebKit (Chrome/Edge/Safari) */
+  .thin-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .thin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(var(--primary-rgb) / 0.2); /* ≈ bg-primary-20 */
+    border-radius: 9999px;
+  }
+  .thin-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: rgb(var(--primary-rgb) / 0.35); /* optional hover */
+  }
+}

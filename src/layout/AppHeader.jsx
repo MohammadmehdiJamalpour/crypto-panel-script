@@ -2,7 +2,7 @@ import React from "react";
 import ProfileBadge from "../components/ProfileBadge";
 
 // Replace with your real avatar path (public or src asset)
-const avatar = "/avatar.png"; // if in /public; or use `import avatar from "../../assets/avatar.png"`
+const avatar = "/profile-defualt.jpg"; 
 
 export default function AppHeader() {
   return (

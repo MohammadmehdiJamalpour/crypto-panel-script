@@ -10,15 +10,7 @@ import { BoltIcon, LockClosedIcon, KeyIcon } from "@heroicons/react/24/outline";
 // Simple content block for each option tile (no TS types in .jsx)
 const Block = ({ title }) => (
   <div className="h-full w-full flex flex-col justify-center gap-1.5">
-    <div className="text-white/85 text-sm font-medium">{title}</div>
-    <div className="text-white/60 text-xs leading-5">
-      <span className="block">
-        This is a sample line to visualize content colors & spacing.
-      </span>
-      <span className="block">
-        This is a sample line to visualize content colors & spacing.
-      </span>
-    </div>
+    
   </div>
 );
 
