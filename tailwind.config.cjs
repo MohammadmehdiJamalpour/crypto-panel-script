@@ -13,6 +13,11 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+       scale: {
+        70: '0.70',
+        65: '0.65',
+        60: '0.60',
+      },
       // Optional: add a named 56% step so you can use `/56`
       opacity: {
         56: '0.56',
