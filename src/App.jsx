@@ -1,6 +1,6 @@
 // src/App.jsx
 import React from "react";
-import AppShell from "./components/layout/AppShell.jsx";
+import AppShell from "./layout/AppShell.jsx";
 import Accordion, {
   AccordionSection,
   AccordionItem,
