@@ -3,8 +3,14 @@
 @tailwind utilities;
 
 :root {
-  /* #040B23 → rgb(4 11 35) */
-  --primary-rgb: 4 11 35;
+  --primary-rgb: 4 11 35; /* #040B23 */
+
+  /* New hover gradient stops (from your screenshot) */
+  --hover-start-rgb: 59 104 255; /* #3B68FF */
+  --hover-end-rgb: 104 128 207; /* #6880CF */
+
+  /* Default alpha for the glow (30%) */
+  --hover-alpha: 0.3;
 }
 @layer utilities {
   /* Thin, rounded scrollbar with primary at 20% */
@@ -28,5 +34,14 @@
   }
   .thin-scrollbar:hover::-webkit-scrollbar-thumb {
     background: rgb(var(--primary-rgb) / 0.35); /* optional hover */
+  }
+  .hover-alpha-20 {
+    --hover-alpha: 0.2;
+  }
+  .hover-alpha-30 {
+    --hover-alpha: 0.3;
+  }
+  .hover-alpha-40 {
+    --hover-alpha: 0.4;
   }
 }

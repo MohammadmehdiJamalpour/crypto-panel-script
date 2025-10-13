@@ -13,21 +13,26 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
-       scale: {
+      scale: {
         70: '0.70',
         65: '0.65',
         60: '0.60',
       },
-      // Optional: add a named 56% step so you can use `/56`
       opacity: {
         56: '0.56',
       },
       colors: {
-        // Enables bg-primary, text-primary, border-primary, and `/opacity` suffixes
         primary: withOpacity('--primary-rgb'),
-
-        // If you still want a fixed 56% alias:
         'primary-56': 'rgb(var(--primary-rgb) / 0.56)',
+
+        /* New semantic colors for the hover gradient stops */
+        'hover-start': withOpacity('--hover-start-rgb'), // #3B68FF
+        'hover-end': withOpacity('--hover-end-rgb'),     // #6880CF
+      },
+      backgroundImage: {
+        /* Radial glow using CSS vars + controllable alpha */
+        'hover-radial':
+          'radial-gradient(120% 120% at 10% -10%, rgb(var(--hover-start-rgb) / var(--hover-alpha)) 0%, rgb(var(--hover-end-rgb) / var(--hover-alpha)) 100%)',
       },
     },
   },
