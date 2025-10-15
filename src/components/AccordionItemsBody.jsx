@@ -63,14 +63,15 @@ function useRailGeometry({ bodyRef, stackRef, itemRefs, deps = [] }) {
 
 /**
  * AccordionItemsBody
- * - renders the items stack with left padding for elbows
- * - draws the vertical rail + rounded elbows
- * - clones children to pass refs and the open state for border coloring
+ * - Renders the items stack with left padding for elbows
+ * - Draws the vertical rail + rounded elbows
+ * - Clones children to pass refs and the open state for border coloring
+ * - STATIC item gap to enforce consistent spacing
  */
 export default function AccordionItemsBody({
   children,
   open,
-  gap,
+  // gap,  // ← ignore external gap; we use a static internal value
   railOffset,
   elbowLen,
   elbowRadius,
@@ -97,13 +98,16 @@ export default function AccordionItemsBody({
   const overlayW = railOffset + elbowLen;
   const padLeft = overlayW + 8;
 
+  // STATIC gap here (px); change this one value to adjust globally
+  const STACK_GAP = 8;
+
   return (
     <div ref={bodyRef} className={cx("relative", className)}>
       {/* Items stack */}
       <div
         ref={stackRef}
         className="flex flex-col"
-        style={{ gap, paddingLeft: padLeft }}
+        style={{ gap: STACK_GAP, paddingLeft: padLeft }}
       >
         {itemsArr.map((child, i) =>
           cloneElement(child, {
@@ -151,7 +155,7 @@ export default function AccordionItemsBody({
                 const cy = Math.max(R, Math.min(H - R, y));
                 const d = [
                   `M ${railOffset} ${cy - R}`,
-                  `a ${R} ${R} 0 0 0 ${R} ${R}`,     // sweep flag kept as in your version
+                  `a ${R} ${R} 0 0 0 ${R} ${R}`,
                   `h ${Math.max(0, elbowLen - R)}`,
                 ].join(" ");
                 return (

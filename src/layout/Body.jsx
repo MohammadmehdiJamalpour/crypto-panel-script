@@ -27,7 +27,7 @@ export default function Body({ className = "" }) {
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto container max-w-md space-y-6">
+      <div className="relative z-10 mx-auto container max-w-md space-y-2">
         {/* NON-OPENABLE labels in one container */}
         <LabelsGroup
           items={[
@@ -45,25 +45,6 @@ export default function Body({ className = "" }) {
         />
 
         <Accordion>
-          {/* Accordion header uses LabelRow with chevron (openable) */}
-          {/* <AccordionSection
-            title="Network Details"
-            accentColor="rgb(96 165 250 / 0.35)"
-            renderHeader={({ open }) => (
-              <LabelRow
-                icon={<MapPinIcon className="h-5 w-5 text-white/80" />}
-                label="Network"
-                value="More details"
-                compact
-                chevron
-                chevronRotated={open}
-                className="bg-white/[0.05] w-full"
-              />
-            )}
-          >
-            <AccordionItem><Block /></AccordionItem>
-          </AccordionSection> */}
-
           <AccordionSection
             title="Power Usage"
             icon={<BoltIcon className="h-5 w-5" />}
@@ -73,7 +54,6 @@ export default function Body({ className = "" }) {
             railOffset={18}
             elbowLen={28}
             elbowRadius={12}
-            gap={14}
           >
             <AccordionItem><Block /></AccordionItem>
             <AccordionItem><Block /></AccordionItem>
@@ -87,7 +67,6 @@ export default function Body({ className = "" }) {
             railOffset={18}
             elbowLen={28}
             elbowRadius={12}
-            gap={14}
           >
             <AccordionItem><Block /></AccordionItem>
             <AccordionItem><Block /></AccordionItem>
@@ -101,7 +80,6 @@ export default function Body({ className = "" }) {
             railOffset={18}
             elbowLen={28}
             elbowRadius={12}
-            gap={14}
           >
             <AccordionItem><Block /></AccordionItem>
           </AccordionSection>

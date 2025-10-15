@@ -56,39 +56,33 @@ const SmoothCollapse = forwardRef(function SmoothCollapse(
   );
 });
 
-/* Item wrapper (unchanged from your design) */
+/* ----------------------------------------------------------
+   AccordionItem (ONE MODE: fixed height, full width)
+----------------------------------------------------------- */
 export const AccordionItem = forwardRef(function AccordionItem(
   {
     children,
     className = "",
     decorated = true,
-    padding = "0",
+    padding,                    // optional override
     bgClass = "bg-white/[0.05]",
     baseRingClass = "ring-1 ring-white/10",
-    optionHeight = 68,
-    height,
-    minHeight,
-    width,
-    style,
     _open = false,
   },
   ref
 ) {
-  const mergedStyle = {
-    ...(height == null && minHeight == null ? { height: optionHeight } : null),
-    ...(width != null ? { width } : null),
-    ...(height != null ? { height } : null),
-    ...(minHeight != null ? { minHeight } : null),
-    ...style,
-  };
+  const DEFAULT_HEIGHT = 60;
+  const DEFAULT_PADDING = "p-1";
 
+  const mergedStyle = { height: DEFAULT_HEIGHT };
+  const padCls = padding ?? DEFAULT_PADDING;
   const borderCls = _open ? "border border-[color:var(--rail)]" : "border-0";
 
   if (!decorated) {
     return (
       <div
         ref={ref}
-        className={cx("relative rounded-2xl", bgClass, borderCls, className)}
+        className={cx("relative w-full rounded-3xl", bgClass, borderCls, padCls, className)}
         style={mergedStyle}
       >
         {children}
@@ -100,11 +94,11 @@ export const AccordionItem = forwardRef(function AccordionItem(
     <div
       ref={ref}
       className={cx(
-        "relative rounded-2xl",
+        "relative w-full rounded-3xl",
         bgClass,
-        padding,
         baseRingClass,
         borderCls,
+        padCls,
         className
       )}
       style={mergedStyle}
@@ -116,7 +110,7 @@ export const AccordionItem = forwardRef(function AccordionItem(
 
 /**
  * AccordionSection
- * - renderHeader?(state) lets you fully control header content (e.g., LabelRow with chevron)
+ * - gap is STATIC (no prop)
  */
 export function AccordionSection({
   title = "Section",
@@ -126,8 +120,7 @@ export function AccordionSection({
   onToggle,
   size = "md",
 
-  // Rail/connector tuning
-  gap = 12,
+  // --- Rail/connector tuning (kept configurable) ---
   railOffset = 12,
   elbowLen = 24,
   elbowRadius = 10,
@@ -147,14 +140,18 @@ export function AccordionSection({
   const uid = useId();
   const [open, setOpen] = useState(defaultOpen);
 
+  // STATIC item stack gap (px)
+  const STACK_GAP = 6;
+
+  // compact header tokens to match your design
   const sizes = {
     sm: { pad: "px-3 py-3", bubble: "h-8 w-8", title: "text-sm" },
-    md: { pad: "px-4 py-4", bubble: "h-8 w-8", title: "text-base" },
+    md: { pad: "px-3 py-3", bubble: "h-8 w-8", title: "text-sm" },
   }[size];
 
   const overlayProps = {
     open,
-    gap,
+    gap: STACK_GAP,            // <- static gap
     railOffset,
     elbowLen,
     elbowRadius,
@@ -172,18 +169,18 @@ export function AccordionSection({
     <>
       <span
         className={cx(
-          "shrink-0 grid place-items-center rounded-2xl bg-white/10 ring-1 ring-white/10",
+          "shrink-0 grid place-items-center rounded-3xl bg-white/10 ring-1 ring-white/10",
           sizes.bubble
         )}
       >
-        {icon ?? <span className="h-1.5 w-1.5 rounded-full bg-white/70" />}
+        {icon ?? <span className="h-1.5 w-1.5 rounded-3ull bg-white/70" />}
       </span>
       <span className={cx("flex-1 text-left font-medium", sizes.title)}>
         {title}
       </span>
       <span
         className={cx(
-          "shrink-0 grid place-items-center rounded-2xl bg-white/10 ring-1 ring-white/10",
+          "shrink-0 grid place-items-center rounded-3xl bg-white/10 ring-1 ring-white/10",
           sizes.bubble
         )}
       >
@@ -216,9 +213,9 @@ export function AccordionSection({
           });
         }}
         className={cx(
-          "w-full flex items-center gap-3 rounded-2xl",
+          "w-full flex items-center gap-3 rounded-3xl",
           headerBgClass,
-          "py-4 text-white/90",
+          "py-3 text-white/90",
           "ring-1 duration-300 transition-all ring-blue-600/30 focus:outline-none focus:ring-1 focus:ring-blue-500/80",
           sizes.pad,
           headerBorderCls
@@ -227,7 +224,7 @@ export function AccordionSection({
         {headerInner}
       </button>
 
-      <SmoothCollapse open={open} className="mt-3" aria-hidden={!open}>
+      <SmoothCollapse open={open} className="mt-1.5" aria-hidden={!open}>
         <div id={`${uid}-panel`} role="region" aria-label={`${title} details`}>
           <AccordionItemsBody {...overlayProps}>{children}</AccordionItemsBody>
         </div>
@@ -236,8 +233,7 @@ export function AccordionSection({
   );
 }
 
-/* Container for multiple sections */
-export default function Accordion({ children, className = "", gap = "md" }) {
-  const gapCls = gap === "sm" ? "space-y-2" : gap === "md" ? "space-y-3" : "space-y-0";
-  return <div className={cx(gapCls, className)}>{children}</div>;
+/* Container for multiple sections — STATIC spacing between sections */
+export default function Accordion({ children, className = "" }) {
+  return <div className={cx("space-y-2", className)}>{children}</div>;
 }
