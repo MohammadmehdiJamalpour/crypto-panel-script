@@ -8,7 +8,7 @@ export default function AppHeader() {
   return (
        <header
       className="
-        relative top-0 z-40 w-full min-h-56 border-b border-white/10
+        relative top-0 z-40 w-full min-h-56
         overflow-hidden rounded-3xl
       "
     >

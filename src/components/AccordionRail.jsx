@@ -58,59 +58,114 @@ const SmoothCollapse = forwardRef(function SmoothCollapse(
 
 /* ----------------------------------------------------------
    AccordionItem (ONE MODE: fixed height, full width)
+   + Optional leftIcon / rightIcon / label / onClick
 ----------------------------------------------------------- */
 export const AccordionItem = forwardRef(function AccordionItem(
   {
     children,
     className = "",
     decorated = true,
-    padding,                    // optional override
+    padding, // optional override
     bgClass = "bg-white/[0.05]",
     baseRingClass = "ring-1 ring-white/10",
+    // NEW:
+    label, // string or node for centered text
+    leftIcon, // <svg/> or <img/> or node
+    rightIcon, // <svg/> or <img/> or node
+    onClick, // make the row clickable
     _open = false,
   },
   ref
 ) {
-  const DEFAULT_HEIGHT = 60;
-  const DEFAULT_PADDING = "p-1";
+  const DEFAULT_HEIGHT = 55;
+  const DEFAULT_PADDING = "px-3"; // compact, leaves space for icons
+
+  const asButton = typeof onClick === "function";
+  const Component = asButton ? "button" : "div";
 
   const mergedStyle = { height: DEFAULT_HEIGHT };
   const padCls = padding ?? DEFAULT_PADDING;
   const borderCls = _open ? "border border-[color:var(--rail)]" : "border-0";
+  const clickCls = asButton
+    ? "cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/70"
+    : "";
+
+  // If label or icons provided, render the standardized centered row.
+  const renderStandardRow =
+    label != null || leftIcon != null || rightIcon != null;
+
+  const content = renderStandardRow ? (
+    <div className="relative h-full w-full">
+      {/* Left icon area */}
+      <div className="absolute inset-y-0 left-0 flex items-center pl-1.5">
+        {leftIcon ? (
+          <span className="grid place-items-center h-7 w-7 rounded-2xl bg-white/10 ring-1 ring-white/10">
+            {leftIcon}
+          </span>
+        ) : null}
+      </div>
+
+      {/* True centered label (independent of icon widths) */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-white/90 font-medium select-none truncate max-w-[75%] text-sm">
+          {label}
+        </div>
+      </div>
+
+      {/* Right icon area */}
+      <div className="absolute inset-y-0 right-0 flex items-center pr-1.5">
+        {rightIcon ? (
+          <span className="grid place-items-center h-7 w-7 rounded-2xl bg-white/10 ring-1 ring-white/10">
+            {rightIcon}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  ) : (
+    children
+  );
 
   if (!decorated) {
     return (
-      <div
+      <Component
         ref={ref}
-        className={cx("relative w-full rounded-3xl", bgClass, borderCls, padCls, className)}
+        onClick={onClick}
+        className={cx(
+          "relative w-full rounded-3xl",
+          padCls,
+          clickCls,
+          className
+        )}
         style={mergedStyle}
       >
-        {children}
-      </div>
+        {content}
+      </Component>
     );
   }
 
   return (
-    <div
+    <Component
       ref={ref}
+      onClick={onClick}
       className={cx(
         "relative w-full rounded-3xl",
         bgClass,
         baseRingClass,
         borderCls,
         padCls,
+        clickCls,
         className
       )}
       style={mergedStyle}
     >
-      {children}
-    </div>
+      {content}
+    </Component>
   );
 });
 
 /**
  * AccordionSection
- * - gap is STATIC (no prop)
+ * - STATIC internal stack gap (enforced in AccordionItemsBody)
  */
 export function AccordionSection({
   title = "Section",
@@ -120,7 +175,7 @@ export function AccordionSection({
   onToggle,
   size = "md",
 
-  // --- Rail/connector tuning (kept configurable) ---
+  // Rail/connector tuning
   railOffset = 12,
   elbowLen = 24,
   elbowRadius = 10,
@@ -140,10 +195,6 @@ export function AccordionSection({
   const uid = useId();
   const [open, setOpen] = useState(defaultOpen);
 
-  // STATIC item stack gap (px)
-  const STACK_GAP = 6;
-
-  // compact header tokens to match your design
   const sizes = {
     sm: { pad: "px-3 py-3", bubble: "h-8 w-8", title: "text-sm" },
     md: { pad: "px-3 py-3", bubble: "h-8 w-8", title: "text-sm" },
@@ -151,7 +202,6 @@ export function AccordionSection({
 
   const overlayProps = {
     open,
-    gap: STACK_GAP,            // <- static gap
     railOffset,
     elbowLen,
     elbowRadius,
@@ -163,7 +213,9 @@ export function AccordionSection({
   const headerBgClass =
     open && highlightHeaderOnOpen ? openHeaderBgClass : closedHeaderBgClass;
 
-  const headerBorderCls = open ? "border border-[color:var(--rail)]" : "border-0";
+  const headerBorderCls = open
+    ? "border border-[color:var(--rail)]"
+    : "border-0";
 
   const DefaultHeader = () => (
     <>
@@ -173,9 +225,11 @@ export function AccordionSection({
           sizes.bubble
         )}
       >
-        {icon ?? <span className="h-1.5 w-1.5 rounded-3ull bg-white/70" />}
+        {icon ?? <span className=" h-1.5 w-1.5 rounded-3xl bg-white/70" />}
       </span>
-      <span className={cx("flex-1 text-left font-medium", sizes.title)}>
+      <span
+        className={cx("flex-1 text-left truncate font-medium", sizes.title)}
+      >
         {title}
       </span>
       <span
@@ -186,7 +240,7 @@ export function AccordionSection({
       >
         <svg
           className={cx(
-            "h-4 w-4 text-white/80 transition-transform duration-200",
+            "h-6 w-6 text-white/80 transition-transform duration-200",
             open && "rotate-180"
           )}
           viewBox="0 0 20 20"
@@ -215,7 +269,7 @@ export function AccordionSection({
         className={cx(
           "w-full flex items-center gap-3 rounded-3xl",
           headerBgClass,
-          "py-3 text-white/90",
+          "py-3 text-white/90  mb-2",
           "ring-1 duration-300 transition-all ring-blue-600/30 focus:outline-none focus:ring-1 focus:ring-blue-500/80",
           sizes.pad,
           headerBorderCls
@@ -224,8 +278,13 @@ export function AccordionSection({
         {headerInner}
       </button>
 
-      <SmoothCollapse open={open} className="mt-1.5" aria-hidden={!open}>
-        <div id={`${uid}-panel`} role="region" aria-label={`${title} details`}>
+      <SmoothCollapse open={open} className="mt-1.5 " aria-hidden={!open}>
+        <div
+          id={`${uid}-panel`}
+          className=" py-2  pr-1"
+          role="region"
+          aria-label={`${title} details`}
+        >
           <AccordionItemsBody {...overlayProps}>{children}</AccordionItemsBody>
         </div>
       </SmoothCollapse>
