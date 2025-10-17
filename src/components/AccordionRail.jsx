@@ -57,7 +57,8 @@ const SmoothCollapse = forwardRef(function SmoothCollapse(
 });
 
 /* ----------------------------------------------------------
-   AccordionItem (fixed size; optional centered label + icons)
+   AccordionItem (fixed height; optional centered label + icons)
+   - Only icon buttons are clickable unless you pass onClick yourself
 ----------------------------------------------------------- */
 export const AccordionItem = forwardRef(function AccordionItem(
   {
@@ -67,13 +68,20 @@ export const AccordionItem = forwardRef(function AccordionItem(
     padding, // optional override
     bgClass = "bg-white/[0.05]",
     baseRingClass = "ring-1 ring-white/10",
-    // Optional standardized row API:
-    label,              // centered text/node
-    leftIcon,           // node
-    rightIcon,          // node
-    onRightIconClick,   // click handler ONLY for right icon
-    onClick,            // optional row click
-    itemId,             // used for scroll-back targeting
+
+    // Standardized row API:
+    label,                // centered text/node
+    leftIcon,             // node
+    rightIcon,            // node
+    onLeftIconClick,      // click handler ONLY for left icon
+    onRightIconClick,     // click handler ONLY for right icon
+
+    // Row click (left inert by default unless you pass this)
+    onClick,
+
+    // For scroll-back targeting
+    itemId,
+
     _open = false,
   },
   ref
@@ -95,36 +103,56 @@ export const AccordionItem = forwardRef(function AccordionItem(
 
   const content = showStandardRow ? (
     <div className="relative h-full w-full">
-      {/* Left icon area */}
+      {/* Left icon area (button only if handler provided) */}
       <div className="absolute inset-y-0 left-0 flex items-center pl-1.5">
         {leftIcon ? (
-          <span className="grid place-items-center h-7 w-7 rounded-2xl bg-white/10 ring-1 ring-white/10">
-            {leftIcon}
-          </span>
+          typeof onLeftIconClick === "function" ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onLeftIconClick?.(e);
+              }}
+              className="grid place-items-center h-7 w-7 rounded-2xl bg-white/10 ring-1 ring-white/10 hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-blue-500/70"
+              aria-label="Back"
+            >
+              {leftIcon}
+            </button>
+          ) : (
+            <span className="grid place-items-center h-7 w-7 rounded-2xl bg-white/10 ring-1 ring-white/10">
+              {leftIcon}
+            </span>
+          )
         ) : null}
       </div>
 
-      {/* True centered label */}
+      {/* True centered label (non-interactive) */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="text-white/90 font-medium select-none truncate max-w-[75%] text-sm">
           {label}
         </div>
       </div>
 
-      {/* Right icon button (doesn’t trigger row onClick) */}
+      {/* Right icon area (button only if handler provided) */}
       <div className="absolute inset-y-0 right-0 flex items-center pr-1.5">
         {rightIcon ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRightIconClick?.(e);
-            }}
-            className="grid place-items-center h-7 w-7 rounded-2xl bg-white/10 ring-1 ring-white/10 hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-blue-500/70"
-            aria-label="Open"
-          >
-            {rightIcon}
-          </button>
+          typeof onRightIconClick === "function" ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRightIconClick?.(e);
+              }}
+              className="grid place-items-center h-7 w-7 rounded-2xl bg-white/10 ring-1 ring-white/10 hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-blue-500/70"
+              aria-label="Open"
+            >
+              {rightIcon}
+            </button>
+          ) : (
+            <span className="grid place-items-center h-7 w-7 rounded-2xl bg-white/10 ring-1 ring-white/10">
+              {rightIcon}
+            </span>
+          )
         ) : null}
       </div>
     </div>
@@ -190,7 +218,7 @@ export function AccordionSection({
   openHeaderBgClass = "bg-blue-500/[0.08] hover:bg-blue-500/[0.12]",
   // custom header renderer
   renderHeader,
-  // NEW: stable id to scroll back to this header (data-anchor)
+  // For scroll-back
   anchorId,
 }) {
   const uid = useId();

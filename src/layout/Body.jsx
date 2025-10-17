@@ -2,7 +2,13 @@ import React from "react";
 import Accordion, { AccordionSection, AccordionItem } from "../components/AccordionRail.jsx";
 import LabelsGroup from "../components/LabelsGroup.jsx";
 import { BoltIcon, LockClosedIcon, KeyIcon } from "@heroicons/react/24/outline";
-import { MapPinIcon, WalletIcon, PlusIcon, ChevronRightIcon, ChevronLeftIcon } from "@heroicons/react/24/solid";
+import {
+  MapPinIcon,
+  WalletIcon,
+  PlusIcon,
+  ChevronRightIcon,
+  ChevronLeftIcon,
+} from "@heroicons/react/24/solid";
 import { usePanelNav } from "../context/PanelNavContext";
 
 const Block = () => <div className="h-full w-full flex flex-col justify-center gap-1.5" />;
@@ -65,7 +71,8 @@ export default function Body({ className = "" }) {
           <AccordionItem
             label={title ?? "Details"}
             leftIcon={<ChevronLeftIcon className="h-4 w-4 text-white/90" />}
-            onClick={goBack}
+            onLeftIconClick={goBack}
+            // no onClick here → only the left chevron area is interactive
           />
         )}
 
@@ -87,15 +94,17 @@ export default function Body({ className = "" }) {
                 itemId="power-status"
                 label="Status"
                 rightIcon={<ChevronRightIcon className="h-4 w-4 text-white/90" />}
-                onRightIconClick={() => drillIn({ sectionId: "power", itemId: "power-status", nextTitle: "Status" })}
-                onClick={() => drillIn({ sectionId: "power", itemId: "power-status", nextTitle: "Status" })}
+                onRightIconClick={() =>
+                  drillIn({ sectionId: "power", itemId: "power-status", nextTitle: "Status" })
+                }
               />
               <AccordionItem
                 itemId="power-usage"
                 label="Power Usage"
                 rightIcon={<ChevronRightIcon className="h-4 w-4 text-white/90" />}
-                onRightIconClick={() => drillIn({ sectionId: "power", itemId: "power-usage", nextTitle: "Power Usage" })}
-                onClick={() => drillIn({ sectionId: "power", itemId: "power-usage", nextTitle: "Power Usage" })}
+                onRightIconClick={() =>
+                  drillIn({ sectionId: "power", itemId: "power-usage", nextTitle: "Power Usage" })
+                }
               />
             </AccordionSection>
 
@@ -114,15 +123,17 @@ export default function Body({ className = "" }) {
                 itemId="security-rules"
                 label="Active Rules"
                 rightIcon={<ChevronRightIcon className="h-4 w-4 text-white/90" />}
-                onRightIconClick={() => drillIn({ sectionId: "security", itemId: "security-rules", nextTitle: "Active Rules" })}
-                onClick={() => drillIn({ sectionId: "security", itemId: "security-rules", nextTitle: "Active Rules" })}
+                onRightIconClick={() =>
+                  drillIn({ sectionId: "security", itemId: "security-rules", nextTitle: "Active Rules" })
+                }
               />
               <AccordionItem
                 itemId="security-alerts"
                 label="Recent Alerts"
                 rightIcon={<ChevronRightIcon className="h-4 w-4 text-white/90" />}
-                onRightIconClick={() => drillIn({ sectionId: "security", itemId: "security-alerts", nextTitle: "Recent Alerts" })}
-                onClick={() => drillIn({ sectionId: "security", itemId: "security-alerts", nextTitle: "Recent Alerts" })}
+                onRightIconClick={() =>
+                  drillIn({ sectionId: "security", itemId: "security-alerts", nextTitle: "Recent Alerts" })
+                }
               />
             </AccordionSection>
 
@@ -142,17 +153,19 @@ export default function Body({ className = "" }) {
                 label="Place a New Rack"
                 leftIcon={<PlusIcon className="h-4 w-4 text-white/90" />}
                 rightIcon={<ChevronRightIcon className="h-4 w-4 text-white/90" />}
-                onRightIconClick={() => drillIn({ sectionId: "actions", itemId: "actions-place-rack", nextTitle: "Place a New Rack" })}
-                onClick={() => drillIn({ sectionId: "actions", itemId: "actions-place-rack", nextTitle: "Place a New Rack" })}
+                onRightIconClick={() =>
+                  drillIn({ sectionId: "actions", itemId: "actions-place-rack", nextTitle: "Place a New Rack" })
+                }
               />
               <AccordionItem
                 itemId="actions-proceed"
                 label="Proceed"
                 rightIcon={<ChevronRightIcon className="h-4 w-4 text-white/90" />}
-                onRightIconClick={() => drillIn({ sectionId: "actions", itemId: "actions-proceed", nextTitle: "Proceed" })}
-                onClick={() => drillIn({ sectionId: "actions", itemId: "actions-proceed", nextTitle: "Proceed" })}
+                onRightIconClick={() =>
+                  drillIn({ sectionId: "actions", itemId: "actions-proceed", nextTitle: "Proceed" })
+                }
               />
-              {/* Example free-form item still allowed */}
+              {/* Example free-form item (no icons) */}
               <AccordionItem itemId="actions-custom">
                 <div className="flex items-center justify-between h-full px-2">
                   <span className="text-white/80 text-sm">Custom content area</span>
