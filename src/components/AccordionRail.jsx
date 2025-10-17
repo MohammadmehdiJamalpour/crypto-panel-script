@@ -57,8 +57,7 @@ const SmoothCollapse = forwardRef(function SmoothCollapse(
 });
 
 /* ----------------------------------------------------------
-   AccordionItem (ONE MODE: fixed height, full width)
-   + Optional leftIcon / rightIcon / label / onClick
+   AccordionItem (fixed size; optional centered label + icons)
 ----------------------------------------------------------- */
 export const AccordionItem = forwardRef(function AccordionItem(
   {
@@ -68,17 +67,19 @@ export const AccordionItem = forwardRef(function AccordionItem(
     padding, // optional override
     bgClass = "bg-white/[0.05]",
     baseRingClass = "ring-1 ring-white/10",
-    // NEW:
-    label, // string or node for centered text
-    leftIcon, // <svg/> or <img/> or node
-    rightIcon, // <svg/> or <img/> or node
-    onClick, // make the row clickable
+    // Optional standardized row API:
+    label,              // centered text/node
+    leftIcon,           // node
+    rightIcon,          // node
+    onRightIconClick,   // click handler ONLY for right icon
+    onClick,            // optional row click
+    itemId,             // used for scroll-back targeting
     _open = false,
   },
   ref
 ) {
   const DEFAULT_HEIGHT = 55;
-  const DEFAULT_PADDING = "px-3"; // compact, leaves space for icons
+  const DEFAULT_PADDING = "px-3";
 
   const asButton = typeof onClick === "function";
   const Component = asButton ? "button" : "div";
@@ -90,11 +91,9 @@ export const AccordionItem = forwardRef(function AccordionItem(
     ? "cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/70"
     : "";
 
-  // If label or icons provided, render the standardized centered row.
-  const renderStandardRow =
-    label != null || leftIcon != null || rightIcon != null;
+  const showStandardRow = label != null || leftIcon != null || rightIcon != null;
 
-  const content = renderStandardRow ? (
+  const content = showStandardRow ? (
     <div className="relative h-full w-full">
       {/* Left icon area */}
       <div className="absolute inset-y-0 left-0 flex items-center pl-1.5">
@@ -105,19 +104,27 @@ export const AccordionItem = forwardRef(function AccordionItem(
         ) : null}
       </div>
 
-      {/* True centered label (independent of icon widths) */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      {/* True centered label */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="text-white/90 font-medium select-none truncate max-w-[75%] text-sm">
           {label}
         </div>
       </div>
 
-      {/* Right icon area */}
+      {/* Right icon button (doesn’t trigger row onClick) */}
       <div className="absolute inset-y-0 right-0 flex items-center pr-1.5">
         {rightIcon ? (
-          <span className="grid place-items-center h-7 w-7 rounded-2xl bg-white/10 ring-1 ring-white/10">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRightIconClick?.(e);
+            }}
+            className="grid place-items-center h-7 w-7 rounded-2xl bg-white/10 ring-1 ring-white/10 hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-blue-500/70"
+            aria-label="Open"
+          >
             {rightIcon}
-          </span>
+          </button>
         ) : null}
       </div>
     </div>
@@ -130,12 +137,8 @@ export const AccordionItem = forwardRef(function AccordionItem(
       <Component
         ref={ref}
         onClick={onClick}
-        className={cx(
-          "relative w-full rounded-3xl",
-          padCls,
-          clickCls,
-          className
-        )}
+        data-item={itemId || undefined}
+        className={cx("relative w-full rounded-3xl", padCls, clickCls, className)}
         style={mergedStyle}
       >
         {content}
@@ -147,6 +150,7 @@ export const AccordionItem = forwardRef(function AccordionItem(
     <Component
       ref={ref}
       onClick={onClick}
+      data-item={itemId || undefined}
       className={cx(
         "relative w-full rounded-3xl",
         bgClass,
@@ -163,10 +167,9 @@ export const AccordionItem = forwardRef(function AccordionItem(
   );
 });
 
-/**
- * AccordionSection
- * - STATIC internal stack gap (enforced in AccordionItemsBody)
- */
+/* ----------------------------------------------------------
+   AccordionSection (adds optional anchorId for scroll-back)
+----------------------------------------------------------- */
 export function AccordionSection({
   title = "Section",
   icon,
@@ -174,23 +177,21 @@ export function AccordionSection({
   defaultOpen = false,
   onToggle,
   size = "md",
-
   // Rail/connector tuning
   railOffset = 12,
   elbowLen = 24,
   elbowRadius = 10,
   railStroke = 1.5,
-
   // Accent for rail + open borders
   accentColor = "rgb(96 165 250 / 0.35)",
-
   // header visuals
   highlightHeaderOnOpen = true,
   decorateChildrenByDefault = true,
   openHeaderBgClass = "bg-blue-500/[0.08] hover:bg-blue-500/[0.12]",
-
   // custom header renderer
   renderHeader,
+  // NEW: stable id to scroll back to this header (data-anchor)
+  anchorId,
 }) {
   const uid = useId();
   const [open, setOpen] = useState(defaultOpen);
@@ -213,9 +214,7 @@ export function AccordionSection({
   const headerBgClass =
     open && highlightHeaderOnOpen ? openHeaderBgClass : closedHeaderBgClass;
 
-  const headerBorderCls = open
-    ? "border border-[color:var(--rail)]"
-    : "border-0";
+  const headerBorderCls = open ? "border border-[color:var(--rail)]" : "border-0";
 
   const DefaultHeader = () => (
     <>
@@ -225,11 +224,9 @@ export function AccordionSection({
           sizes.bubble
         )}
       >
-        {icon ?? <span className=" h-1.5 w-1.5 rounded-3xl bg-white/70" />}
+        {icon ?? <span className="h-1.5 w-1.5 rounded-3xl bg-white/70" />}
       </span>
-      <span
-        className={cx("flex-1 text-left truncate font-medium", sizes.title)}
-      >
+      <span className={cx("flex-1 text-left truncate font-medium", sizes.title)}>
         {title}
       </span>
       <span
@@ -266,10 +263,11 @@ export function AccordionSection({
             return !v;
           });
         }}
+        data-anchor={anchorId || undefined}
         className={cx(
           "w-full flex items-center gap-3 rounded-3xl",
           headerBgClass,
-          "py-3 text-white/90  mb-2",
+          "py-3 text-white/90 mb-2",
           "ring-1 duration-300 transition-all ring-blue-600/30 focus:outline-none focus:ring-1 focus:ring-blue-500/80",
           sizes.pad,
           headerBorderCls
@@ -278,10 +276,10 @@ export function AccordionSection({
         {headerInner}
       </button>
 
-      <SmoothCollapse open={open} className="mt-1.5 " aria-hidden={!open}>
+      <SmoothCollapse open={open} className="mt-1.5" aria-hidden={!open}>
         <div
           id={`${uid}-panel`}
-          className=" py-2  pr-1"
+          className="py-2 pr-1"
           role="region"
           aria-label={`${title} details`}
         >
@@ -292,7 +290,7 @@ export function AccordionSection({
   );
 }
 
-/* Container for multiple sections — STATIC spacing between sections */
+/* Container with static spacing */
 export default function Accordion({ children, className = "" }) {
   return <div className={cx("space-y-2", className)}>{children}</div>;
 }
