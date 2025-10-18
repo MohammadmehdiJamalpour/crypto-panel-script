@@ -1,5 +1,11 @@
+// src/layout/Body.jsx
 import React from "react";
-import Accordion, { AccordionSection, AccordionItem } from "../components/AccordionRail.jsx";
+
+// ✅ use the split components
+import Accordion from "../components/Accordion.jsx";
+import AccordionSection from "../components/AccordionSection.jsx";
+import AccordionItem from "../components/AccordionItem.jsx";
+
 import LabelsGroup from "../components/LabelsGroup.jsx";
 import { BoltIcon, LockClosedIcon, KeyIcon } from "@heroicons/react/24/outline";
 import {
@@ -9,6 +15,7 @@ import {
   ChevronRightIcon,
   ChevronLeftIcon,
 } from "@heroicons/react/24/solid";
+
 import { usePanelNav } from "../context/PanelNavContext";
 
 const Block = () => <div className="h-full w-full flex flex-col justify-center gap-1.5" />;
@@ -59,7 +66,7 @@ export default function Body({ className = "" }) {
       </div>
 
       <div className="relative z-10 mx-auto container max-w-md space-y-2">
-        {/* Body "header" row */}
+        {/* Body header row / detail header */}
         {!isDetail ? (
           <LabelsGroup
             items={[
@@ -72,7 +79,6 @@ export default function Body({ className = "" }) {
             label={title ?? "Details"}
             leftIcon={<ChevronLeftIcon className="h-4 w-4 text-white/90" />}
             onLeftIconClick={goBack}
-            // no onClick here → only the left chevron area is interactive
           />
         )}
 

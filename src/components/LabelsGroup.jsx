@@ -1,18 +1,33 @@
 import React from "react";
-import LabelRow from "./LabelRow.jsx";
+import cx from "./utils/cx";
+import RowShell from "./atoms/RowShell";
+import IconChip from "./atoms/IconChip";
+import TopGlow from "./atoms/TopGlow";
 
-export default function LabelsGroup({ items = [], className = "" }) {
+export default function LabelsGroup({ items = [], className = "", rowHeight = 56 }) {
   return (
-    <div className={["w-full space-y-2", className].join(" ")}>
-      {items.map((it, i) => (
-        <LabelRow
-          key={i}
-          icon={it.icon}
-          label={it.label}
-          value={it.value}
-          // chevron = false → these are informational only
-          chevron={false}
-        />
+    <div className={cx("space-y-2", className)}>
+      {items.map((it, idx) => (
+        <RowShell
+          key={idx}
+          style={{ height: rowHeight }}
+          className={cx("px-3", "bg-white/[0.05] ring-1 ring-white/10 rounded-2xl", "relative overflow-hidden")}
+        >
+          <TopGlow />
+          <div className="h-full flex items-center gap-3">
+            {/* LEFT chip reacts to container hover */}
+            <IconChip
+              hoverMode="group"
+              groupName="row"
+              node={it.icon}
+              ariaLabel="label icon"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm/5 text-white/70 truncate">{it.label}</div>
+              {it.value ? <div className="text-base font-semibold text-white truncate">{it.value}</div> : null}
+            </div>
+          </div>
+        </RowShell>
       ))}
     </div>
   );

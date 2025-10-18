@@ -10,6 +10,8 @@
   --hover-end-rgb: 104 128 207; /* #6880CF */
 
   /* Default alpha for the glow (30%) */
+  --hover-start-rgb: 59 104 255; /* #3B68FF */
+  --hover-end-rgb: 104 128 207; /* #6880CF */
   --hover-alpha: 0.3;
 }
 @layer utilities {
