@@ -47,14 +47,7 @@ export default function Modal({ open, onClose, title = "Modal title", children }
                </div>
                 <div className="mt-4">{children}</div>
 
-                <div className="mt-6 flex justify-end gap-2">
-                  <button
-                    onClick={onClose}
-                    className="px-3 py-1.5 rounded-lg duration-300 bg-white/10 hover:bg-white/20 ring-1 ring-white/20"
-                  >
-                    Close
-                  </button>
-                </div>
+               
               </Dialog.Panel>
             </Transition.Child>
           </div>
