@@ -1,46 +1,15 @@
-import React, { useId, useState } from "react";
+import React, { useCallback, useId, useMemo, useState } from "react";
 import cx from "./utils/cx";
 import AccordionItemsBody from "./AccordionItemsBody.jsx";
 import IconChip from "./atoms/IconChip";
 
-export default function AccordionSection({
-  title = "Section",
-  icon,
-  children,
-  defaultOpen = false,
-  onToggle,
-  size = "md",
-  railOffset = 12,
-  elbowLen = 24,
-  elbowRadius = 10,
-  railStroke = 1.5,
-  accentColor = "rgb(96 165 250 / 0.35)",
-  openHeaderBgClass = "bg-white/[0.05]",
-  decorateChildrenByDefault = true,
-  renderHeader,
-  anchorId,
-}) {
-  const uid = useId();
-  const [open, setOpen] = useState(defaultOpen);
+const SIZE_MAP = {
+  sm: { pad: "px-3 py-3", title: "text-sm" },
+  md: { pad: "px-3 py-3", title: "text-sm" },
+};
 
-  const sizes = {
-    sm: { pad: "px-3 py-3", title: "text-sm" },
-    md: { pad: "px-3 py-3", title: "text-sm" },
-  }[size];
-
-  const overlayProps = {
-    open,
-    railOffset,
-    elbowLen,
-    elbowRadius,
-    railStroke,
-    decorateChildrenByDefault,
-  };
-
-  const headerBgClass = openHeaderBgClass;
-  const headerBorderCls = open ? "border border-[color:var(--rail)]" : "border-0";
-
-  const DefaultHeader = () => (
+function DefaultHeader({ open, icon, title, titleClass }) {
+  return (
     <>
       {/* LEFT chip reacts to header hover */}
       <span className="shrink-0">
@@ -51,9 +20,7 @@ export default function AccordionSection({
         />
       </span>
 
-      <span className={cx("flex-1 text-left truncate font-medium", sizes.title)}>
-        {title}
-      </span>
+      <span className={cx("flex-1 text-left truncate font-medium", titleClass)}>{title}</span>
 
       {/* RIGHT chevron reacts only to its own hover */}
       <span className="shrink-0">
@@ -76,8 +43,59 @@ export default function AccordionSection({
       </span>
     </>
   );
+}
 
-  const headerInner = renderHeader ? renderHeader({ open }) : <DefaultHeader />;
+export default function AccordionSection({
+  title = "Section",
+  icon,
+  children,
+  defaultOpen = false,
+  onToggle,
+  size = "md",
+  railOffset = 12,
+  elbowLen = 24,
+  elbowRadius = 10,
+  railStroke = 1.5,
+  accentColor = "rgb(96 165 250 / 0.35)",
+  openHeaderBgClass = "bg-white/[0.05]",
+  decorateChildrenByDefault = true,
+  renderHeader,
+  anchorId,
+}) {
+  const uid = useId();
+  const [open, setOpen] = useState(defaultOpen);
+
+  const sizes = SIZE_MAP[size] ?? SIZE_MAP.md;
+
+  const overlayProps = {
+    open,
+    railOffset,
+    elbowLen,
+    elbowRadius,
+    railStroke,
+    decorateChildrenByDefault,
+  };
+
+  const headerBgClass = openHeaderBgClass;
+  const headerBorderCls = open ? "border border-[color:var(--rail)]" : "border-0";
+
+  const handleToggle = useCallback(() => {
+    setOpen((v) => {
+      const next = !v;
+      onToggle?.(next);
+      return next;
+    });
+  }, [onToggle]);
+
+  const headerInner = useMemo(
+    () =>
+      renderHeader
+        ? renderHeader({ open })
+        : (
+          <DefaultHeader open={open} icon={icon} title={title} titleClass={sizes.title} />
+        ),
+    [icon, open, renderHeader, sizes.title, title]
+  );
 
   return (
     <section className="w-full" style={{ "--rail": accentColor }}>
@@ -85,12 +103,7 @@ export default function AccordionSection({
         type="button"
         aria-expanded={open}
         aria-controls={`${uid}-panel`}
-        onClick={() => {
-          setOpen((v) => {
-            onToggle?.(!v);
-            return !v;
-          });
-        }}
+        onClick={handleToggle}
         data-anchor={anchorId || undefined}
         className={cx(
           "w-full flex items-center gap-3 rounded-3xl group/sect", // named group

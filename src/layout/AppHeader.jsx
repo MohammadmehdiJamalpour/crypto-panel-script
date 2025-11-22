@@ -1,12 +1,21 @@
-import React from "react";
+import React, { useMemo } from "react";
 import ProfileBadge from "../components/ProfileBadge";
 
-// Replace with your real avatar path (public or src asset)
-const avatar = "/profile-defualt.jpg"; 
+const DEFAULT_AVATAR = "/profile-defualt.jpg";
 
-export default function AppHeader() {
+export default function AppHeader({ profile }) {
+  const { name, bio, profileImg } = useMemo(() => {
+    const fallback = { name: "Bizhan Bahrami", bio: "Sales Materials", profileImg: DEFAULT_AVATAR };
+    if (!profile) return fallback;
+    return {
+      name: profile.name || fallback.name,
+      bio: profile.bio || fallback.bio,
+      profileImg: profile.profileImg || fallback.profileImg,
+    };
+  }, [profile]);
+
   return (
-       <header
+    <header
       className="
         relative top-0 z-40 w-full min-h-56
         overflow-hidden rounded-3xl
@@ -24,11 +33,11 @@ export default function AppHeader() {
         aria-hidden
       />
 
-      {/* Your header content */}
+      {/* Header content driven by profile */}
       <ProfileBadge
-        name="Bizhan Bahrami"
-        subtitle="Sales Materials"
-        avatarSrc={avatar}
+        name={name}
+        subtitle={bio}
+        avatarSrc={profileImg}
         className="absolute top-[10%] left-[10%] md:top-[15%]"
       />
     </header>

@@ -1,16 +1,16 @@
 import React, {
   Children,
   cloneElement,
+  createRef,
   useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
+import cx from "./utils/cx";
 
-/* tiny classnames helper */
-function cx(...parts) {
-  return parts.flat().filter(Boolean).join(" ");
-}
+const STACK_GAP = 8;
+const LEFT_PAD_BUFFER = 8;
 
 /* measure stack geometry for rail & elbows */
 function useRailGeometry({ bodyRef, stackRef, itemRefs, deps = [] }) {
@@ -61,17 +61,64 @@ function useRailGeometry({ bodyRef, stackRef, itemRefs, deps = [] }) {
   return { stackTop, stackH, midYs };
 }
 
+function buildRailElements({ midYs, stackH, elbowLen, elbowRadius, railOffset, railStroke }) {
+  const H = Math.max(stackH, 1);
+  const R = elbowRadius;
+
+  let railEndY = H;
+  if (midYs.length > 0) {
+    const last = midYs[midYs.length - 1];
+    const lastCy = Math.max(R, Math.min(H - R, last));
+    railEndY = Math.max(0, Math.min(H, lastCy - R));
+  }
+
+  return (
+    <>
+      {/* vertical rail */}
+      <path
+        d={`M ${railOffset} 0 V ${railEndY}`}
+        fill="none"
+        stroke="var(--rail)"
+        strokeWidth={railStroke}
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+      {/* elbows (quarter arc + horizontal, no overlap with rail) */}
+      {midYs.map((y, idx) => {
+        const cy = Math.max(R, Math.min(H - R, y));
+        const d = [
+          `M ${railOffset} ${cy - R}`,
+          `a ${R} ${R} 0 0 0 ${R} ${R}`,
+          `h ${Math.max(0, elbowLen - R)}`,
+        ].join(" ");
+        return (
+          <path
+            key={idx}
+            d={d}
+            fill="none"
+            stroke="var(--rail)"
+            strokeWidth={railStroke}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
+          />
+        );
+      })}
+    </>
+  );
+}
+
 /**
  * AccordionItemsBody
  * - Renders the items stack with left padding for elbows
  * - Draws the vertical rail + rounded elbows
  * - Clones children to pass refs and the open state for border coloring
- * - STATIC item gap to enforce consistent spacing
+ * - Static item gap to enforce consistent spacing
  */
 export default function AccordionItemsBody({
   children,
   open,
-  // gap,  // ← ignore external gap; we use a static internal value
+  // gap,  // ignore external gap; we use a static internal value
   railOffset,
   elbowLen,
   elbowRadius,
@@ -79,13 +126,13 @@ export default function AccordionItemsBody({
   decorateChildrenByDefault,
   className = "",
 }) {
-  const bodyRef = useRef(null);   // relative container for overlay
-  const stackRef = useRef(null);  // the actual items stack
+  const bodyRef = useRef(null); // relative container for overlay
+  const stackRef = useRef(null); // the actual items stack
 
   const itemsArr = useMemo(() => Children.toArray(children), [children]);
   const itemRefs = useRef([]);
   if (itemRefs.current.length !== itemsArr.length) {
-    itemRefs.current = itemsArr.map((_, i) => itemRefs.current[i] ?? React.createRef());
+    itemRefs.current = itemsArr.map((_, i) => itemRefs.current[i] ?? createRef());
   }
 
   const { stackTop, stackH, midYs } = useRailGeometry({
@@ -96,10 +143,21 @@ export default function AccordionItemsBody({
   });
 
   const overlayW = railOffset + elbowLen;
-  const padLeft = overlayW + 8;
+  const padLeft = overlayW + LEFT_PAD_BUFFER;
+  const overlayHeight = Math.max(stackH, 1);
 
-  // STATIC gap here (px); change this one value to adjust globally
-  const STACK_GAP = 8;
+  const railElements = useMemo(
+    () =>
+      buildRailElements({
+        midYs,
+        stackH: overlayHeight,
+        elbowLen,
+        elbowRadius,
+        railOffset,
+        railStroke,
+      }),
+    [elbowLen, elbowRadius, midYs, overlayHeight, railOffset, railStroke]
+  );
 
   return (
     <div ref={bodyRef} className={cx("relative", className)}>
@@ -124,56 +182,10 @@ export default function AccordionItemsBody({
       <svg
         aria-hidden
         className="pointer-events-none absolute"
-        style={{ left: 0, top: stackTop, width: overlayW, height: Math.max(stackH, 1) }}
-        viewBox={`0 0 ${overlayW} ${Math.max(stackH, 1)}`}
+        style={{ left: 0, top: stackTop, width: overlayW, height: overlayHeight }}
+        viewBox={`0 0 ${overlayW} ${overlayHeight}`}
       >
-        {(() => {
-          const H = Math.max(stackH, 1);
-          const R = elbowRadius;
-
-          // rail stops at the start of the last elbow (no tail below)
-          let railEndY = H;
-          if (midYs.length > 0) {
-            const last = midYs[midYs.length - 1];
-            const lastCy = Math.max(R, Math.min(H - R, last));
-            railEndY = Math.max(0, Math.min(H, lastCy - R));
-          }
-
-          return (
-            <>
-              {/* vertical rail */}
-              <path
-                d={`M ${railOffset} 0 V ${railEndY}`}
-                fill="none"
-                stroke="var(--rail)"
-                strokeWidth={railStroke}
-                strokeLinecap="round"
-                vectorEffect="non-scaling-stroke"
-              />
-              {/* elbows (quarter arc + horizontal, no overlap with rail) */}
-              {midYs.map((y, idx) => {
-                const cy = Math.max(R, Math.min(H - R, y));
-                const d = [
-                  `M ${railOffset} ${cy - R}`,
-                  `a ${R} ${R} 0 0 0 ${R} ${R}`,
-                  `h ${Math.max(0, elbowLen - R)}`,
-                ].join(" ");
-                return (
-                  <path
-                    key={idx}
-                    d={d}
-                    fill="none"
-                    stroke="var(--rail)"
-                    strokeWidth={railStroke}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    vectorEffect="non-scaling-stroke"
-                  />
-                );
-              })}
-            </>
-          );
-        })()}
+        {railElements}
       </svg>
     </div>
   );

@@ -1,57 +1,24 @@
 import React, { useEffect, useRef } from "react";
 import AppHeader from "./AppHeader";
 import Footer from "./Footer";
-import { PanelNavProvider, usePanelNav } from "../context/PanelNavContext";
+import useDraggablePanel from "../utils/useDraggablePanel";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
-function Panel({ children }) {
-  const { mode, restoreSectionId, restoreItemId } = usePanelNav();
+const moveIcon = "/move.svg";
+
+function Panel({ children, user, profile, onClose }) {
   const scrollRef = useRef(null);
-  const prevModeRef = useRef(null);
+  const panelRef = useRef(null);
+  const { offset, startDrag } = useDraggablePanel(panelRef);
 
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const prev = prevModeRef.current;
-    prevModeRef.current = mode;
-
-    // Drill-in: scroll panel to top
-    if (mode === "detail") {
-      el.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-
-    // Back from detail: open the section and scroll to the item
-    if (prev === "detail" && mode === "main" && restoreSectionId) {
-      // 1) After main re-renders, find the header button
-      requestAnimationFrame(() => {
-        const headerBtn = el.querySelector(`[data-anchor="${restoreSectionId}"]`);
-        if (!headerBtn) return;
-
-        // If the section is closed, click to open it
-        const expanded = headerBtn.getAttribute("aria-expanded");
-        if (expanded === "false") {
-          headerBtn.click();
-        }
-
-        // 2) Ensure header is in view first
-        headerBtn.scrollIntoView({ behavior: "smooth", block: "start" });
-
-        // 3) Next frame: scroll the clicked item into view (center)
-        requestAnimationFrame(() => {
-          if (!restoreItemId) return;
-          const itemNode = el.querySelector(`[data-item="${restoreItemId}"]`);
-          if (itemNode) {
-            itemNode.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-        });
-      });
-    }
-  }, [mode, restoreSectionId, restoreItemId]);
+    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   return (
     <div className="relative h-dvh text-white">
       <div
+        ref={panelRef}
         className="
           absolute top-[8vh] xl:top-[10vh] bottom-[8vh] xl:bottom-[10vh]
           w-2/5 max-w-sm lg:max-w-md xl:w-1/3 2xl:w-1/4
@@ -59,13 +26,42 @@ function Panel({ children }) {
           bg-primary rounded-3xl overflow-hidden
           flex flex-col
         "
+        style={{ transform: `translate3d(${offset.x}px, ${offset.y}px, 0)` }}
       >
+        <div className="absolute top-3 right-3 z-50 flex items-center gap-2">
+          <button
+            type="button"
+            onPointerDown={startDrag}
+            className="
+              grid place-items-center h-9 w-9
+              rounded-2xl bg-white/10 ring-1 ring-white/15 text-white
+              hover:bg-white/20 transition-colors cursor-move
+              focus:outline-none focus:ring-2 focus:ring-blue-500/60
+            "
+            aria-label="Move panel"
+          >
+            <img src={moveIcon} alt="Move" className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="
+              grid place-items-center h-9 w-9
+              rounded-2xl bg-white/10 ring-1 ring-white/15 text-white
+              hover:bg-white/20 transition-colors
+              focus:outline-none focus:ring-2 focus:ring-blue-500/60
+            "
+            aria-label="Close panel"
+          >
+            <XMarkIcon className="h-5 w-5" />
+          </button>
+        </div>
         {/* Scroll container */}
         <main
           ref={scrollRef}
           className="flex-1 overflow-y-auto thin-scrollbar [scrollbar-gutter:stable] px-4 py-6 scroll-smooth"
         >
-          <AppHeader />
+          <AppHeader user={user} profile={profile} />
           {children}
         </main>
         <Footer />
@@ -74,10 +70,10 @@ function Panel({ children }) {
   );
 }
 
-export default function AppShell({ children }) {
+export default function AppShell({ children, user, profile, onClose }) {
   return (
-    <PanelNavProvider>
-      <Panel>{children}</Panel>
-    </PanelNavProvider>
+    <Panel user={user} profile={profile} onClose={onClose}>
+      {children}
+    </Panel>
   );
 }
