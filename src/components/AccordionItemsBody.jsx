@@ -7,7 +7,9 @@ import React, {
   useRef,
   useState,
 } from "react";
-import cx from "./utils/cx";
+function cx(...parts) {
+  return parts.flat().filter(Boolean).join(" ");
+}
 
 const STACK_GAP = 8;
 const LEFT_PAD_BUFFER = 8;

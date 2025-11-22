@@ -1,79 +1,91 @@
 import React from "react";
-import Accordion from "../components/Accordion.jsx";
-import AccordionSection from "../components/AccordionSection.jsx";
-import AccordionItem from "../components/AccordionItem.jsx";
-import LabelsGroup from "../components/LabelsGroup.jsx";
-import LabelRow from "../components/LabelRow.jsx";
+import Label from "../components/Label.jsx";
 
-const smallDot = <span className="h-2.5 w-2.5 rounded-full bg-green-400" />;
+import PowerDetailView from "../components/PowerDetailView.jsx";
+import { data } from "../data.js";
+import { PowerIcon, BoltIcon } from "@heroicons/react/24/outline";
 
 export default function Body({ className = "" }) {
+  const [activeItem, setActiveItem] = React.useState(null);
+
   return (
     <section className={`relative flex-1 px-4 py-6 ${className}`}>
-      <div className="mx-auto max-w-md space-y-6">
-        <AccordionTemplates />
-        <LabelsTemplates />
+      <div className="mx-auto max-w-md ">
+        {activeItem ? (
+          <DetailView item={activeItem} onBack={() => setActiveItem(null)} />
+        ) : (
+          <MainList
+            onOpen={(item) => item?.key === "powerUsage" && setActiveItem(item)}
+          />
+        )}
       </div>
     </section>
   );
 }
 
-function AccordionTemplates() {
-  return (
-    <div className="space-y-3">
-      <div className="text-xs font-semibold text-white/70">Accordion templates</div>
-      <div className="rounded-3xl bg-white/5 ring-1 ring-white/10 p-4 space-y-4">
-        <Accordion>
-          <AccordionSection
-            title="Quick Status"
-            icon={smallDot}
-            defaultOpen
-            decorateChildrenByDefault={false}
-          >
-            <AccordionItem label="System Online" decorated />
-            <AccordionItem label="Cooling nominal" decorated />
-            <AccordionItem label="Network stable" decorated />
-          </AccordionSection>
+function MainList({ onOpen }) {
+  const statusIsOnline = data.status?.toLowerCase?.() === "online";
+  const statusText = statusIsOnline ? "Online" : "Offline";
+  const statusColor = statusIsOnline ? "text-emerald-300" : "text-red-300";
+  const capacity = data.powerUsage?.capacity ?? 1000;
+  const currentPower = data.powerUsage?.powerUsage ?? 0;
+  const powerPct = Math.min(100, Math.max(0, Math.round((currentPower / capacity) * 100)));
 
-          <AccordionSection
-            title="Upcoming Tasks"
-            icon={<span className="h-2.5 w-2.5 rounded-full bg-amber-300" />}
-            railOffset={10}
-            elbowLen={18}
-            elbowRadius={7}
-          >
-            <AccordionItem label="Check rack airflow" />
-            <AccordionItem label="Verify camera feeds" />
-            <AccordionItem label="Inspect alarms panel" />
-          </AccordionSection>
-        </Accordion>
-      </div>
-    </div>
-  );
-}
-
-function LabelsTemplates() {
-  const badge = <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />;
-  const defaultItems = [
-    { icon: badge, label: "Status", value: "Online" },
-    { icon: badge, label: "Power", value: "[424/1000] KW/h" },
-    { icon: badge, label: "Cooling", value: "Nominal" },
+  const items = [
+    {
+      key: "status",
+      icon: <PowerIcon className={`h-4 w-4 ${statusColor}`} />,
+      label: "Status",
+      value: statusText,
+      chevron: false,
+    },
+    {
+      key: "powerUsage",
+      icon: <BoltIcon className="h-4 w-4 text-blue-200" />,
+      label: "Power Usage",
+      value: `[${currentPower}/${capacity}] KW/h`,
+      chevron: true,
+      progress: powerPct,
+      onClick: () => onOpen({ key: "powerUsage", title: "Power Usage" }),
+      onChevronClick: () => onOpen({ key: "powerUsage", title: "Power Usage" }),
+    },
+    {
+      key: "overhead",
+      icon: <PowerIcon className="h-4 w-4 text-blue-200" />,
+      label: "Overhead Usage",
+      value: `${data.powerUsage?.overheadUsage?.RackA1 ?? 0} W`,
+      chevron: false,
+    },
   ];
 
   return (
     <div className="space-y-3">
-      <div className="text-xs font-semibold text-white/70">Label templates</div>
-      <div className="rounded-3xl bg-white/5 ring-1 ring-white/10 p-4 space-y-4">
-        <LabelsGroup items={defaultItems} />
-
-        <LabelRow
-          icon={badge}
-          label="Single row"
-          value="Clickable"
-          chevron
-          className="mt-2"
-        />
-      </div>
+      <Label items={items} />
     </div>
+  );
+}
+
+function DetailView({ item, onBack }) {
+  const statusIsOnline = data.status?.toLowerCase?.() === "online";
+  const statusColor = statusIsOnline ? "text-emerald-300" : "text-red-300";
+  const powerUsage = data.powerUsage?.powerUsage ?? 0;
+  const capacity = data.powerUsage?.capacity ?? 1000;
+  const overhead = data.powerUsage?.overheadUsage?.RackA1 ?? 0;
+
+  if (item.key !== "powerUsage") {
+    onBack();
+    return null;
+  }
+
+  return (
+    <PowerDetailView
+      title={item.title}
+      onBack={onBack}
+      statusColor={statusColor}
+      statusText={statusIsOnline ? "Online" : "Offline"}
+      powerUsage={powerUsage}
+      capacity={capacity}
+      overhead={overhead}
+    />
   );
 }

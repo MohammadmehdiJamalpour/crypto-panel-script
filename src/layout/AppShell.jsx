@@ -59,7 +59,7 @@ function Panel({ children, user, profile, onClose }) {
         {/* Scroll container */}
         <main
           ref={scrollRef}
-          className="flex-1 overflow-y-auto thin-scrollbar [scrollbar-gutter:stable] px-4 py-6 scroll-smooth"
+          className="flex-1  overflow-y-auto thin-scrollbar [scrollbar-gutter:stable] px-3 py-4 scroll-smooth"
         >
           <AppHeader user={user} profile={profile} />
           {children}

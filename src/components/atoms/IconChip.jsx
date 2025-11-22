@@ -1,5 +1,4 @@
 import React from "react";
-import cx from "../utils/cx";
 
 /**
  * IconChip
@@ -22,22 +21,21 @@ export default function IconChip({
     "transition-colors duration-200";
 
   const selfHover =
-    "hover:bg-[rgb(var(--hover-start-rgb))] " +
-    "hover:ring-[rgb(var(--hover-start-rgb))]";
+    "hover:bg-blue-500/20 " +
+    "hover:ring-blue-500/40 " +
+    "hover:text-blue-200";
 
   const groupHover =
-    `group-hover/${groupName}:bg-[rgb(var(--hover-start-rgb))] ` +
-    `group-hover/${groupName}:ring-[rgb(var(--hover-start-rgb))]`;
+    `group-hover/${groupName}:bg-blue-500/20 ` +
+    `group-hover/${groupName}:ring-blue-500/40 ` +
+    `group-hover/${groupName}:text-blue-200`;
 
   // lock size so callers can't change it
   const sizeLock = "h-7 w-7";
 
-  const cls = cx(
-    base,
-    hoverMode === "group" ? groupHover : selfHover,
-    className,
-    sizeLock
-  );
+  const cls = [base, hoverMode === "group" ? groupHover : selfHover, className, sizeLock]
+    .filter(Boolean)
+    .join(" ");
 
   if (typeof onClick === "function") {
     return (
@@ -47,10 +45,7 @@ export default function IconChip({
           e.stopPropagation();
           onClick?.(e);
         }}
-        className={cx(
-          cls,
-          "focus:outline-none focus:ring-2 focus:ring-blue-500/70"
-        )}
+        className={[cls, "focus:outline-none focus:ring-2 focus:ring-blue-500/70"].join(" ")}
         aria-label={ariaLabel}
       >
         {node}

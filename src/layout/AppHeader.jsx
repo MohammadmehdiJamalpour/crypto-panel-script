@@ -17,7 +17,7 @@ export default function AppHeader({ profile }) {
   return (
     <header
       className="
-        relative top-0 z-40 w-full min-h-56
+        relative top-0 z-40 w-full min-h-40 3xl:min-h-56
         overflow-hidden rounded-3xl
       "
     >
@@ -38,7 +38,7 @@ export default function AppHeader({ profile }) {
         name={name}
         subtitle={bio}
         avatarSrc={profileImg}
-        className="absolute top-[10%] left-[10%] md:top-[15%]"
+        className="absolute max-w-[90%] top-[5%] left-[5%] md:top-[15%]"
       />
     </header>
   );

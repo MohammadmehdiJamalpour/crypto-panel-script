@@ -25,7 +25,7 @@ export const data = {
   // === Power usage ===
   powerUsage: {
     status: "normal",
-    powerUsage: 0,
+    powerUsage: 500,
     overheadUsage: {
       RackA1: 1200,
       RackA2: 950,

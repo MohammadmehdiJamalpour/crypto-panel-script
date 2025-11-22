@@ -1,5 +1,4 @@
 import React, { useCallback, useId, useMemo, useState } from "react";
-import cx from "./utils/cx";
 import AccordionItemsBody from "./AccordionItemsBody.jsx";
 import IconChip from "./atoms/IconChip";
 
@@ -7,6 +6,10 @@ const SIZE_MAP = {
   sm: { pad: "px-3 py-3", title: "text-sm" },
   md: { pad: "px-3 py-3", title: "text-sm" },
 };
+
+function cx(...parts) {
+  return parts.flat().filter(Boolean).join(" ");
+}
 
 function DefaultHeader({ open, icon, title, titleClass }) {
   return (
@@ -105,14 +108,15 @@ export default function AccordionSection({
         aria-controls={`${uid}-panel`}
         onClick={handleToggle}
         data-anchor={anchorId || undefined}
-        className={cx(
-          "w-full flex items-center gap-3 rounded-3xl group/sect", // named group
-          headerBgClass,
-          "py-3 text-white/90 mb-2",
-          "ring-1 ring-white/10 focus:outline-none focus:ring-1 focus:ring-blue-500/70",
-          sizes.pad,
-          headerBorderCls
-        )}
+          className={cx(
+            "relative w-full flex items-center gap-3 rounded-2xl overflow-hidden group/sect", // named group
+            "ring-1 ring-white/10 bg-white/[0.05] text-white/85 backdrop-blur-sm",
+            "transition-all duration-300 hover:bg-white/[0.1] hover:ring-white/30",
+            "focus:outline-none focus:ring-1 focus:ring-blue-500/70",
+            sizes.pad,
+            headerBorderCls,
+            headerBgClass
+          )}
       >
         {headerInner}
       </button>
