@@ -146,7 +146,7 @@ function InlineLabelRow({
     );
   };
 
-  const minHeight = !autoHeight && typeof progress === "number" ? "calc(3.5rem + 20px)" : undefined;
+  const minHeight = !autoHeight && value && typeof progress === "number" ? "calc(3.5rem + 20px)" : undefined;
 
   return (
     <Component

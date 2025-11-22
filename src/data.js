@@ -10,22 +10,30 @@ export const data = {
 
   // === Strings / basic app info ===
   warehouseIp: "192.168.0.10",
-  status: "offline",
+  status: "online",
   overallMinersHealth: "good",
+  approximateYield: "[0/0]",
+  withdraw: "12.234 $",
+  overallHealthValue: 75,
 
+  cryptoCoins: [
+    { name: "Bitcoin", symbol: "BTC", value: "$68,210" },
+    { name: "Ethereum", symbol: "ETH", value: "$3,520" },
+    { name: "Litecoin", symbol: "LTC", value: "$175" },
+  ],
   // === Profile ===
   profile: {
     username: "admin",
     password: "admin123",
     name: "Mining Operator",
-    bio: "Responsible for monitoring and maintaining all miners.",
+    bio: "Responsible.",
     profileImg: "/profile-defualt.jpg",
   },
 
   // === Power usage ===
   powerUsage: {
     status: "normal",
-    powerUsage: 500,
+    powerUsage: 200,
     overheadUsage: {
       RackA1: 1200,
       RackA2: 950,
@@ -46,7 +54,12 @@ export const data = {
 
   // === Rack section ===
   rackSection: {
-    createRackOptions: ["singleRack", "doubleRowRack", "wallMountedRack", "customLayout"],
+    createRackOptions: [
+      "singleRack",
+      "doubleRowRack",
+      "wallMountedRack",
+      "customLayout",
+    ],
     placeNewRack: {
       row: null,
       column: null,
@@ -98,3 +111,10 @@ export const data = {
     ],
   },
 };
+
+// Async helper to update password; replace with real fetch/API later
+export async function updateProfilePassword(pwd) {
+  // TODO: replace with API call (e.g., POST /api/password)
+  data.profile.password = pwd;
+  return Promise.resolve();
+}

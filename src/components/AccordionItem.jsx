@@ -19,6 +19,7 @@ const AccordionItem = forwardRef(function AccordionItem(
 
     // standardized row API:
     label,
+    value,
     leftIcon,
     rightIcon,
     chevron = false,
@@ -48,17 +49,24 @@ const AccordionItem = forwardRef(function AccordionItem(
   const inner = useMemo(
     () =>
       showStandard ? (
-        <div className="relative h-full w-full pl-10 pr-6">
+        <div className="relative h-full  w-full pl-10 pr-6">
           <TopGlow />
 
-          <div className="absolute inset-y-0 left-0 flex items-center pl-1.5">
+          <div className="absolute inset-y-0 left-0 flex items-center ">
             {leftIcon ? (
               <IconChip node={leftIcon} onClick={onLeftIconClick} ariaLabel="left action" />
             ) : null}
           </div>
 
-          <div className="flex items-center h-full pointer-events-none">
-            <div className="text-white/90 font-medium select-none truncate text-sm">{label}</div>
+          <div className="flex items-center h-full">
+            <div className="flex flex-col items-start  gap-1 select-none">
+              {label ? (
+                <div className="text-white/90 font-medium truncate text-sm">{label}</div>
+              ) : null}
+              {value ? (
+                <div className="text-xs text-white/70 truncate">{value}</div>
+              ) : null}
+            </div>
           </div>
 
           <div className="absolute inset-y-0 right-0 flex items-center pr-1.5">
