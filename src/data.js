@@ -2,11 +2,15 @@
 
 export const data = {
   // === Booleans ===
-  mainMenu: false,
+  mainMenu: true,
   loginModal: false,
   setPasswordModal: false,
   setWithdrawModal: false,
   remoteControl: false,
+  addCameraModal: false,
+  rackStandaloneMode: false,
+  rackStandaloneRackId: "rack-a1",
+  addRackModal: false,
 
   // === Strings / basic app info ===
   warehouseIp: "192.168.0.10",
@@ -41,19 +45,21 @@ export const data = {
     },
   },
 
-  // === Security ===
+// === Security ===
   security: {
-    motionSensorStatus: "inactive",
+    motionSensorStatus: false,
     installedMotionSensor: 0,
     addNewCamera: false,
     securityCameras: [
-      { cameraId: "cam-1", cameraName: "Entrance Camera" },
-      { cameraId: "cam-2", cameraName: "Warehouse Aisle 1" },
+      { cameraId: "cam-01", cameraName: "Entrance Camera" },
+      { cameraId: "cam-02", cameraName: "Warehouse Aisle 1" },
     ],
   },
 
   // === Rack section ===
   rackSection: {
+    addRackModal: false,
+    selectedRackType: null,
     createRackOptions: [
       "singleRack",
       "doubleRowRack",
@@ -70,21 +76,21 @@ export const data = {
         rackName: "Rack A1",
         rackStatus: "online",
         yield: 0.0,
-        overallMinersHealth: "good",
+        overallMinersHealth: 85,
         removeRack: false,
         rackPosition: { row: 1, column: 1 },
         miners: [
           {
             minerId: "miner-a1-01",
             minerName: "Miner A1-01",
-            minerHealth: "good",
+            minerHealth: 85,
             minerLastRepair: "2025-10-10",
             powerUsage: 1200,
           },
           {
             minerId: "miner-a1-02",
             minerName: "Miner A1-02",
-            minerHealth: "ok",
+            minerHealth: 60,
             minerLastRepair: "2025-09-15",
             powerUsage: 1150,
           },
@@ -93,16 +99,16 @@ export const data = {
       {
         rackId: "rack-b1",
         rackName: "Rack B1",
-        rackStatus: "maintenance",
+        rackStatus: "offline",
         yield: 0.0,
-        overallMinersHealth: "critical",
+        overallMinersHealth: 30,
         removeRack: false,
         rackPosition: { row: 1, column: 2 },
         miners: [
           {
             minerId: "miner-b1-01",
             minerName: "Miner B1-01",
-            minerHealth: "critical",
+            minerHealth: 25,
             minerLastRepair: "2025-08-01",
             powerUsage: 1400,
           },
@@ -116,5 +122,75 @@ export const data = {
 export async function updateProfilePassword(pwd) {
   // TODO: replace with API call (e.g., POST /api/password)
   data.profile.password = pwd;
+  return Promise.resolve();
+}
+
+// Async helper to request a withdraw; replace with real fetch/API later
+export async function submitWithdrawRequest({ coin, address }) {
+  // TODO: replace with API call (e.g., POST /api/withdraw)
+  data.lastWithdrawRequest = { coin, address, requestedAt: Date.now() };
+  return Promise.resolve();
+}
+
+// Async helper to install/enable motion sensors; replace with real fetch/API later
+export async function installMotionSensors() {
+  // TODO: replace with API call (e.g., POST /api/security/motion)
+  data.security.motionSensorStatus = "active";
+  return Promise.resolve();
+}
+
+// Async helper to add a security camera; replace with real fetch/API later
+export async function addSecurityCamera(name) {
+  // TODO: replace with API call (e.g., POST /api/security/cameras)
+  const nextId = `cam-${(data.security.securityCameras.length + 1).toString().padStart(2, "0")}`;
+  data.security.securityCameras.push({ cameraId: nextId, cameraName: name || `Camera ${nextId}` });
+  data.security.addNewCamera = false;
+  return Promise.resolve();
+}
+
+// Async helper to add a rack; replace with real fetch/API later
+export async function addRack({ type, name }) {
+  // TODO: replace with API call (e.g., POST /api/racks)
+  const nextId = `rack-${(data.rackSection.racks.length + 1).toString().padStart(2, "0")}`;
+  data.rackSection.racks.push({
+    rackId: nextId,
+    rackName: name || `Rack ${nextId}`,
+    rackStatus: "online",
+    yield: 0,
+    overallMinersHealth: "good",
+    removeRack: false,
+    rackPosition: { row: null, column: null },
+    type: type || "custom",
+    miners: [],
+  });
+  data.rackSection.addRackModal = false;
+  data.rackSection.selectedRackType = null;
+  return Promise.resolve();
+}
+
+// Async helper to request a miner repair; replace with real fetch/API later
+export async function requestMinerRepair({ rackId, minerId }) {
+  // TODO: replace with API call (e.g., POST /api/miners/repair)
+  data.lastMinerRepairRequest = { rackId, minerId, requestedAt: Date.now() };
+  return Promise.resolve();
+}
+
+// Async helper to change rack position; replace with real fetch/API later
+export async function changeRackPosition({ rackId, row, column }) {
+  // TODO: replace with API call (e.g., POST /api/racks/position)
+  const rack = data.rackSection.racks.find((r) => r.rackId === rackId);
+  if (rack) {
+    rack.rackPosition = {
+      row: row ?? rack.rackPosition?.row ?? null,
+      column: column ?? rack.rackPosition?.column ?? null,
+    };
+  }
+  return Promise.resolve();
+}
+
+// Async helper to remove a rack; replace with real fetch/API later
+export async function removeRackById(rackId) {
+  // TODO: replace with API call (e.g., DELETE /api/racks/:id)
+  data.rackSection.racks = data.rackSection.racks.filter((r) => r.rackId !== rackId);
   return Promise.resolve();
 }

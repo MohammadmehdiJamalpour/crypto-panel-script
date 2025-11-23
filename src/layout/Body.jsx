@@ -6,7 +6,7 @@ import RackDetailView from "../components/RackDetailView.jsx";
 import SecurityDetailView from "../components/SecurityDetailView.jsx";
 import WithdrawModal from "../components/WithdrawModal.jsx";
 import SetPasswordModal from "../components/SetPasswordModal.jsx";
-import { data, updateProfilePassword } from "../data.js";
+import { data, updateProfilePassword, submitWithdrawRequest } from "../data.js";
 import {
   PowerIcon,
   BoltIcon,
@@ -14,6 +14,7 @@ import {
   BanknotesIcon,
   WrenchIcon,
   ShieldCheckIcon,
+  LockClosedIcon
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import Accordion from "../components/Accordion.jsx";
@@ -21,16 +22,45 @@ import AccordionSection from "../components/AccordionSection.jsx";
 import AccordionItem from "../components/AccordionItem.jsx";
 
 export default function Body({ className = "" }) {
-  const [activeItem, setActiveItem] = React.useState(null);
+  const isStandalone = data.rackStandaloneMode;
+  const targetRackId = data.rackStandaloneRackId;
+
+  const initialItem = isStandalone
+    ? {
+        key: "rackControl",
+        title: "Rack Control Menu",
+        standalone: true,
+        targetRackId,
+      }
+    : null;
+
+  const [activeItem, setActiveItem] = React.useState(initialItem);
   const [activeCoin, setActiveCoin] = React.useState(null);
   const [passwordModalOpen, setPasswordModalOpen] = React.useState(!!data.setPasswordModal);
   const [withdrawModalOpen, setWithdrawModalOpen] = React.useState(!!data.setWithdrawModal);
 
+  const handleOpenPassword = React.useCallback(() => {
+    setPasswordModalOpen(true);
+    data.setPasswordModal = true;
+  }, []);
+
   return (
-    <section className={`relative flex-1 px-4 py-6 ${className}`}>
+    <section className={`relative flex-1 px-4 py-6 overflow-hidden ${className}`}>
+      {/* subtle background illustration for menu area */}
+      <div
+        aria-hidden
+        className="
+          pointer-events-none fixed inset-0 top-28 -z-10 
+          bg-[url('/crypto-tokens.svg')] bg-no-repeat bg-center bg-contain
+        "
+      />
       <div className="mx-auto max-w-md ">
         {activeItem ? (
-          <DetailView item={activeItem} onBack={() => setActiveItem(null)} />
+          <DetailView
+            item={activeItem}
+            onBack={isStandalone ? undefined : () => setActiveItem(null)}
+            onOpenPassword={handleOpenPassword}
+          />
         ) : (
           <MainList
             onOpen={(item) => setActiveItem(item)}
@@ -39,10 +69,7 @@ export default function Body({ className = "" }) {
               setWithdrawModalOpen(true);
               data.setWithdrawModal = true;
             }}
-            onOpenPassword={() => {
-              setPasswordModalOpen(true);
-              data.setPasswordModal = true;
-            }}
+            onOpenPassword={handleOpenPassword}
           />
         )}
         <WithdrawModal
@@ -52,6 +79,9 @@ export default function Body({ className = "" }) {
             setActiveCoin(null);
             setWithdrawModalOpen(false);
             data.setWithdrawModal = false;
+          }}
+          onSave={({ coin, address }) => {
+            return submitWithdrawRequest({ coin, address });
           }}
         />
         <SetPasswordModal
@@ -86,8 +116,8 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
     {
       key: "status",
       icon: <PowerIcon className={`h-5 w-5 ${statusColor}`} />,
-      label: "Status",
-      value: statusText,
+      label: <span className={statusColor}>Status</span>,
+      value: <span className={statusColor}>{statusText}</span>,
       chevron: false,
     },
     {
@@ -101,7 +131,7 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
     },
     {
       key: "security",
-      icon: <ShieldCheckIcon className="h-5 w-5 text-blue-200" />,
+      icon: <LockClosedIcon className="h-5 w-5 text-blue-200" />,
       label: "Open Security Measures",
       chevron: true,
       onClick: () => onOpen({ key: "security", title: "Security Measures" }),
@@ -178,7 +208,7 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
   );
 }
 
-function DetailView({ item, onBack }) {
+function DetailView({ item, onBack, onOpenPassword }) {
   const statusIsOnline = data.status?.toLowerCase?.() === "online";
   const statusColor = statusIsOnline ? "text-emerald-300" : "text-red-300";
   const powerUsage = data.powerUsage?.powerUsage ?? 0;
@@ -195,10 +225,7 @@ function DetailView({ item, onBack }) {
         powerUsage={powerUsage}
         capacity={capacity}
         overhead={overhead}
-        onOpenPassword={() => {
-          data.setPasswordModal = true;
-          setPasswordModalOpen(true);
-        }}
+        onOpenPassword={onOpenPassword}
       />
     );
   }
@@ -209,6 +236,8 @@ function DetailView({ item, onBack }) {
         title={item.title}
         onBack={onBack}
         rackSection={data.rackSection}
+        standalone={item?.standalone || data.rackStandaloneMode}
+        targetRackId={item?.targetRackId || data.rackStandaloneRackId}
       />
     );
   }

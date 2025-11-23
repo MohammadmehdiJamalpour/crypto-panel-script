@@ -30,9 +30,11 @@ function useRailGeometry({ bodyRef, stackRef, itemRefs, deps = [] }) {
       setStackTop(stackRect.top - bodyRect.top);
       setStackH(stackRect.height);
 
-      const mids = itemRefs.current.map((r) => {
+      const fallbackGap = itemRefs.current.length > 0 ? stackRect.height / itemRefs.current.length : 0;
+
+      const mids = itemRefs.current.map((r, i) => {
         const el = r.current;
-        if (!el) return 0;
+        if (!el) return fallbackGap * (i + 0.5);
         const rect = el.getBoundingClientRect();
         return rect.top - stackRect.top + rect.height / 2;
       });
@@ -71,7 +73,7 @@ function buildRailElements({ midYs, stackH, elbowLen, elbowRadius, railOffset, r
   if (midYs.length > 0) {
     const last = midYs[midYs.length - 1];
     const lastCy = Math.max(R, Math.min(H - R, last));
-    railEndY = Math.max(0, Math.min(H, lastCy - R));
+    railEndY = Math.max(0, Math.min(H, lastCy));
   }
 
   return (
@@ -169,15 +171,18 @@ export default function AccordionItemsBody({
         className="flex flex-col"
         style={{ gap: STACK_GAP, paddingLeft: padLeft }}
       >
-        {itemsArr.map((child, i) =>
-          cloneElement(child, {
-            ref: itemRefs.current[i],
-            _open: open,
-            ...(child.props.decorated === undefined && decorateChildrenByDefault
-              ? { decorated: true }
-              : null),
-          })
-        )}
+        {itemsArr.map((child, i) => {
+          const decoratedChild =
+            child.props.decorated === undefined && decorateChildrenByDefault
+              ? cloneElement(child, { decorated: true })
+              : child;
+
+          return (
+            <div key={child.key ?? i} ref={itemRefs.current[i]}>
+              {cloneElement(decoratedChild, { _open: open })}
+            </div>
+          );
+        })}
       </div>
 
       {/* Overlay: rail + elbows restricted to stack area */}
