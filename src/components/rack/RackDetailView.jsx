@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Label from "../ui/Label.jsx";
 import DetailLayout from "../ui/detail/DetailLayout.jsx";
 import Accordion from "../ui/accordion/Accordion.jsx";
@@ -7,12 +7,14 @@ import AccordionItem from "../ui/accordion/AccordionItem.jsx";
 import AddRackModal from "./AddRackModal.jsx";
 import { WrenchIcon, PlusIcon, PowerIcon, BanknotesIcon, Cog6ToothIcon, TrashIcon, BoltIcon } from "@heroicons/react/24/outline";
 import { changeRackPosition, data, removeRackById, requestMinerRepair } from "../../data.js";
+import { scrollContainerToTop } from "../../utils/scroll.js";
 
 export default function RackDetailView({ title, onBack, rackSection, standalone = false, targetRackId = null }) {
   const racks = rackSection?.racks || [];
   const [rackModalOpen, setRackModalOpen] = useState(!!(data.addRackModal || rackSection?.addRackModal));
   const [selectedType, setSelectedType] = useState(rackSection?.selectedRackType || null);
   const [selectedRack, setSelectedRack] = useState(null);
+  const containerRef = useRef(null);
 
   const targetRack = useMemo(
     () => (standalone && targetRackId ? racks.find((r) => r.rackId === targetRackId) || null : null),
@@ -31,6 +33,12 @@ export default function RackDetailView({ title, onBack, rackSection, standalone 
     if (data.addRackModal && !rackModalOpen) setRackModalOpen(true);
     if (!data.addRackModal && rackModalOpen && !rackSection?.addRackModal) setRackModalOpen(false);
   }, [rackModalOpen, rackSection?.addRackModal]);
+
+  useEffect(() => {
+    if (selectedRack && containerRef.current) {
+      scrollContainerToTop(containerRef.current);
+    }
+  }, [selectedRack]);
 
   const currentRack = selectedRack || targetRack || null;
 
@@ -119,72 +127,7 @@ export default function RackDetailView({ title, onBack, rackSection, standalone 
 
   const minerProgress = (val) => Math.min(100, Math.max(0, Number(val ?? 0)));
 
-  if (currentRack) {
-    return (
-      <DetailLayout title={currentRack.rackName} onBack={standalone ? undefined : () => setSelectedRack(null)}>
-        <Label items={rackDetailLabels} />
-
-        {(currentRack.miners || []).length > 0 ? (
-          <Accordion className="mt-3 space-y-2">
-            {(currentRack.miners || []).map((miner) => {
-              const color = healthColor(miner.minerHealth);
-              const statusText = minerStatusText(miner.minerHealth);
-              const pct = minerProgress(miner.minerHealth);
-
-              return (
-                <AccordionSection
-                  key={miner.minerId}
-                  title={
-                    <div className="flex flex-col w-full gap-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-white/90">{miner.minerName}</span>
-                        <span className={`text-xs ${color}`}>{pct}%</span>
-                      </div>
-                      <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-green-500 transition-[width] duration-300 ease-out"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  }
-                  icon={<BoltIcon className={`h-4 w-4 ${color}`} />}
-                  defaultOpen={false}
-                  decorateChildrenByDefault
-                >
-                  <AccordionItem
-                    label="Power Usage"
-                    value={`${miner.powerUsage ?? 0} W`}
-                    leftIcon={<BoltIcon className="h-4 w-4 text-blue-200" />}
-                  />
-                  <AccordionItem
-                    label="Last Repair"
-                    value={miner.minerLastRepair ?? "--"}
-                    leftIcon={<WrenchIcon className="h-4 w-4 text-blue-200" />}
-                  />
-                  {pct < 100 ? (
-                    <AccordionItem
-                      label="Repair Needed"
-                      leftIcon={<Cog6ToothIcon className="h-4 w-4 text-amber-300" />}
-                      chevron
-                      onClick={async () => {
-                        await requestMinerRepair({ rackId: currentRack.rackId, minerId: miner.minerId });
-                      }}
-                      onChevronClick={async () => {
-                        await requestMinerRepair({ rackId: currentRack.rackId, minerId: miner.minerId });
-                      }}
-                    />
-                  ) : null}
-                </AccordionSection>
-              );
-            })}
-          </Accordion>
-        ) : null}
-      </DetailLayout>
-    );
-  }
-
-  if (standalone && targetRackId) {
+  if (standalone && targetRackId && !currentRack) {
     return (
       <DetailLayout title={title} onBack={undefined}>
         <Label
@@ -200,69 +143,156 @@ export default function RackDetailView({ title, onBack, rackSection, standalone 
     );
   }
 
+  const hasSelected = !!currentRack;
+  const detailOnBack = !standalone
+    ? hasSelected
+      ? () => setSelectedRack(null)
+      : onBack
+    : undefined;
+
   return (
-    <DetailLayout title={title} onBack={standalone ? undefined : onBack}>
-      <Accordion className="space-y-2">
-        <AccordionSection
-          title="Place a new Rack"
-          icon={<WrenchIcon className="h-4 w-4 text-blue-200" />}
-          defaultOpen={false}
-          decorateChildrenByDefault
+    <DetailLayout title={hasSelected ? currentRack.rackName : title} onBack={detailOnBack}>
+      <div ref={containerRef} className="relative min-h-[320px]">
+        <div
+          className={[
+            "transition-all duration-300",
+            hasSelected ? "opacity-0 -translate-x-4 pointer-events-none" : "opacity-100 translate-x-0",
+          ].join(" ")}
         >
-          {(rackSection?.createRackOptions || []).map((opt) => (
-            <AccordionItem
-              key={opt}
-              label={opt}
-              leftIcon={<PlusIcon className="h-4 w-4 text-blue-200" />}
-              chevron
-              onClick={() => {
-                setSelectedType(opt);
-                setRackModalOpen(true);
-                data.addRackModal = true;
-                data.rackSection.selectedRackType = opt;
-              }}
-              onChevronClick={() => {
-                setSelectedType(opt);
-                setRackModalOpen(true);
-                data.addRackModal = true;
-                data.rackSection.selectedRackType = opt;
-              }}
-            />
-          ))}
-        </AccordionSection>
-        <AccordionSection
-          title="Placed Racks"
-          icon={<WrenchIcon className="h-4 w-4 text-blue-200" />}
-          defaultOpen={false}
-          decorateChildrenByDefault
-        >
-          {racks.map((rack) => (
-            <AccordionItem
-              key={rack.rackId}
-              label={rack.rackName}
-              value={
-                <span
-                  className={`${
-                    (rack.rackStatus || "").toLowerCase() === "online" ? "text-emerald-300" : "text-red-400"
-                  }`}
-                >
-                  {rack.rackStatus}
-                </span>
-              }
-              leftIcon={
-                <PowerIcon
-                  className={`h-4 w-4 ${
-                    (rack.rackStatus || "").toLowerCase() === "online" ? "text-emerald-300" : "text-red-400"
-                  }`}
+          <Accordion className="space-y-2">
+            <AccordionSection
+              title="Place a new Rack"
+              icon={<WrenchIcon className="h-4 w-4 text-blue-200" />}
+              defaultOpen={false}
+              decorateChildrenByDefault
+            >
+              {(rackSection?.createRackOptions || []).map((opt) => (
+                <AccordionItem
+                  key={opt}
+                  label={opt}
+                  leftIcon={<PlusIcon className="h-4 w-4 text-blue-200" />}
+                  chevron
+                  onClick={() => {
+                    setSelectedType(opt);
+                    setRackModalOpen(true);
+                    data.addRackModal = true;
+                    data.rackSection.selectedRackType = opt;
+                  }}
+                  onChevronClick={() => {
+                    setSelectedType(opt);
+                    setRackModalOpen(true);
+                    data.addRackModal = true;
+                    data.rackSection.selectedRackType = opt;
+                  }}
                 />
-              }
-              chevron
-              onClick={() => setSelectedRack(rack)}
-              onChevronClick={() => setSelectedRack(rack)}
-            />
-          ))}
-        </AccordionSection>
-      </Accordion>
+              ))}
+            </AccordionSection>
+            <AccordionSection
+              title="Placed Racks"
+              icon={<WrenchIcon className="h-4 w-4 text-blue-200" />}
+              defaultOpen={false}
+              decorateChildrenByDefault
+            >
+              {racks.map((rack) => (
+                <AccordionItem
+                  key={rack.rackId}
+                  label={rack.rackName}
+                  value={
+                    <span
+                      className={`${
+                        (rack.rackStatus || "").toLowerCase() === "online" ? "text-emerald-300" : "text-red-400"
+                      }`}
+                    >
+                      {rack.rackStatus}
+                    </span>
+                  }
+                  leftIcon={
+                    <PowerIcon
+                      className={`h-4 w-4 ${
+                        (rack.rackStatus || "").toLowerCase() === "online" ? "text-emerald-300" : "text-red-400"
+                      }`}
+                    />
+                  }
+                  chevron
+                  onClick={() => setSelectedRack(rack)}
+                  onChevronClick={() => setSelectedRack(rack)}
+                />
+              ))}
+            </AccordionSection>
+          </Accordion>
+        </div>
+
+        <div
+          className={[
+            "absolute inset-0 transition-all duration-300",
+            hasSelected ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none",
+          ].join(" ")}
+        >
+          {hasSelected ? (
+            <>
+              <Label items={rackDetailLabels} />
+
+              {(currentRack.miners || []).length > 0 ? (
+                <Accordion className="mt-3 space-y-2">
+                  {(currentRack.miners || []).map((miner) => {
+                    const color = healthColor(miner.minerHealth);
+                    const statusText = minerStatusText(miner.minerHealth);
+                    const pct = minerProgress(miner.minerHealth);
+
+                    return (
+                      <AccordionSection
+                        key={miner.minerId}
+                        title={
+                          <div className="flex flex-col w-full gap-1">
+                            <div className="flex items-center justify-between">
+                              <span className="text-white/90">{miner.minerName}</span>
+                              <span className={`text-xs ${color}`}>{pct}%</span>
+                            </div>
+                            <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-green-500 transition-[width] duration-300 ease-out"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                          </div>
+                        }
+                        icon={<BoltIcon className={`h-4 w-4 ${color}`} />}
+                        defaultOpen={false}
+                        decorateChildrenByDefault
+                      >
+                        <AccordionItem
+                          label="Power Usage"
+                          value={`${miner.powerUsage ?? 0} W`}
+                          leftIcon={<BoltIcon className="h-4 w-4 text-blue-200" />}
+                        />
+                        <AccordionItem
+                          label="Last Repair"
+                          value={miner.minerLastRepair ?? "--"}
+                          leftIcon={<WrenchIcon className="h-4 w-4 text-blue-200" />}
+                        />
+                        {pct < 100 ? (
+                          <AccordionItem
+                            label="Repair Needed"
+                            leftIcon={<Cog6ToothIcon className="h-4 w-4 text-amber-300" />}
+                            chevron
+                            onClick={async () => {
+                              await requestMinerRepair({ rackId: currentRack.rackId, minerId: miner.minerId });
+                            }}
+                            onChevronClick={async () => {
+                              await requestMinerRepair({ rackId: currentRack.rackId, minerId: miner.minerId });
+                            }}
+                          />
+                        ) : null}
+                      </AccordionSection>
+                    );
+                  })}
+                </Accordion>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      </div>
+
       <AddRackModal
         open={rackModalOpen}
         rackType={selectedType}

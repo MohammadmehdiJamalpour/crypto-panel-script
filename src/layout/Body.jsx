@@ -1,4 +1,5 @@
 import React from "react";
+import { scrollContainerToTop } from "../utils/scroll.js";
 import Label from "../components/ui/Label.jsx";
 
 import PowerDetailView from "../components/power/PowerDetailView.jsx";
@@ -59,8 +60,17 @@ export default function Body({ className = "" }) {
       setWithdrawModalOpen(false);
   }, [passwordModalOpen, withdrawModalOpen]);
 
+  const containerRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!activeItem || !containerRef.current) return;
+
+    scrollContainerToTop(containerRef.current);
+  }, [activeItem]);
+
   return (
     <section
+      ref={containerRef}
       className={`relative flex-1 px-4 py-6 overflow-hidden ${className}`}
     >
       {/* subtle background illustration for menu area */}
@@ -71,25 +81,45 @@ export default function Body({ className = "" }) {
           bg-[url('/crypto-tokens.svg')] bg-no-repeat bg-center bg-contain
         "
       />
-      <div className="mx-auto max-w-md ">
-        {activeItem ? (
-          <DetailView
-            item={activeItem}
-            onBack={isStandalone ? undefined : () => setActiveItem(null)}
-            onOpenPassword={handleOpenPassword}
-          />
-        ) : (
-          <MainList
-            onOpen={(item) => setActiveItem(item)}
-            onOpenCoin={(coin) => {
-              setActiveCoin(coin);
-              setWithdrawModalOpen(true);
-              data.setWithdrawModal = true;
-            }}
-            onOpenPassword={handleOpenPassword}
-          />
-        )}
-         
+      <div className="mx-auto max-w-md relative">
+        <div className="relative min-h-[400px]">
+          <div
+            className={[
+              "transition-all duration-300",
+              activeItem
+                ? "opacity-0 -translate-x-4 pointer-events-none"
+                : "opacity-100 translate-x-0",
+            ].join(" ")}
+          >
+            <MainList
+              onOpen={(item) => setActiveItem(item)}
+              onOpenCoin={(coin) => {
+                setActiveCoin(coin);
+                setWithdrawModalOpen(true);
+                data.setWithdrawModal = true;
+              }}
+              onOpenPassword={handleOpenPassword}
+            />
+          </div>
+
+          <div
+            className={[
+              "absolute inset-0 transition-all duration-300",
+              activeItem
+                ? "opacity-100 translate-x-0"
+                : "opacity-0 translate-x-4 pointer-events-none",
+            ].join(" ")}
+          >
+            {activeItem ? (
+              <DetailView
+                item={activeItem}
+                onBack={isStandalone ? undefined : () => setActiveItem(null)}
+                onOpenPassword={handleOpenPassword}
+              />
+            ) : null}
+          </div>
+        </div>
+
         <SetPasswordModal
           open={passwordModalOpen}
           onClose={() => {
@@ -128,7 +158,7 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
 
     {
       key: "powerUsage",
-      icon: <BoltIcon className="h-5 w-5 text-blue-200" />,
+      icon: <BoltIcon className="h-5 w-5 text-red-500" />,
       label: "Power Usage",
       value: `[${currentPower}/${capacity}] KW/h`,
       chevron: true,
@@ -136,7 +166,7 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
       onClick: () => onOpen({ key: "powerUsage", title: "Power Usage" }),
       onChevronClick: () => onOpen({ key: "powerUsage", title: "Power Usage" }),
     },
-     {
+    {
       key: "warehouseIp",
       icon: <LinkIcon className="h-5 w-5 text-blue-200" />,
       label: "Warehouse IP",
@@ -145,21 +175,21 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
     },
     {
       key: "approxYield",
-      icon: <BanknotesIcon className="h-5 w-5  text-green-600" />,
+      icon: <BanknotesIcon className="h-5 w-5  text-green-500" />,
       label: "Approximate Yield",
       value: data.approximateYield ?? "",
       chevron: false,
     },
     {
       key: "overallHealth",
-      icon: <WrenchIcon className="h-5 w-5 text-blue-200" />,
+      icon: <WrenchIcon className="h-5 w-5 text-yellow-500" />,
       label: "Overall Miners Health",
       progress: healthPct,
       chevron: false,
     },
     {
       key: "rackControl",
-      icon: <WrenchIcon className="h-5 w-5 text-blue-200" />,
+      icon: <WrenchIcon className="h-5 w-5 text-yellow-500" />,
       label: "Open Racks Control Menu",
       chevron: true,
       onClick: () => onOpen({ key: "rackControl", title: "Rack Control Menu" }),
@@ -168,7 +198,7 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
     },
     {
       key: "security",
-      icon: <LockClosedIcon className="h-5 w-5 text-blue-200" />,
+      icon: <LockClosedIcon className="h-5 w-5 text-red-400" />,
       label: "Open Security Measures",
       chevron: true,
       onClick: () => onOpen({ key: "security", title: "Security Measures" }),
@@ -182,8 +212,6 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
       onClick: onOpenPassword,
       onChevronClick: onOpenPassword,
     },
-
-   
   ];
 
   const withdrawChildren = [
@@ -204,17 +232,25 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
   ];
 
   return (
-    <div className="space-y-3">
+    <div className="">
       <Label
         items={items.filter(
-          (it) => !["overallHealth", "rackControl", "security", "setPassword"].includes(it.key)
+          (it) =>
+            ![
+              "overallHealth",
+              "rackControl",
+              "security",
+              "setPassword",
+            ].includes(it.key)
         )}
       />
 
       <CryptoAccordion onOpenCoin={onOpenCoin} />
       <Label
         items={items.filter((it) =>
-          ["overallHealth", "rackControl", "security", "setPassword"].includes(it.key)
+          ["overallHealth", "rackControl", "security", "setPassword"].includes(
+            it.key
+          )
         )}
       />
     </div>
@@ -272,22 +308,22 @@ function DetailView({ item, onBack, onOpenPassword }) {
 function CryptoAccordion({ onOpenCoin }) {
   const coins = data.cryptoCoins || [];
   return (
-    <Accordion className="space-y-2">
+    <Accordion className="space-y-2 mt-1.5">
       <AccordionSection
         title={`Withdraw: ${data.withdraw ?? ""}`}
-        icon={<BanknotesIcon className="h-5 w-5 text-blue-200" />}
+        icon={<BanknotesIcon className="h-5 w-5 text-green-500" />}
         defaultOpen={false}
         decorateChildrenByDefault
       >
         <AccordionItem
           label={`withdraw with :`}
-          leftIcon={<BanknotesIcon className="h-5 w-5 text-blue-200" />}
+          leftIcon={<BanknotesIcon className="h-5 w-5 text-green-500" />}
         />
         {coins.map((coin) => (
           <AccordionItem
             key={coin.symbol}
             label={`${coin.name} (${coin.symbol})`}
-            leftIcon={<BanknotesIcon className="h-5 w-5 text-blue-200" />}
+            leftIcon={<BanknotesIcon className="h-5 w-5 text-green-500" />}
             value={coin.value}
             chevron
             onClick={() => onOpenCoin?.(coin)}
