@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import Label from "./Label.jsx";
-import DetailLayout from "./DetailLayout.jsx";
-import Accordion from "./Accordion.jsx";
-import AccordionSection from "./AccordionSection.jsx";
-import AccordionItem from "./AccordionItem.jsx";
+import Label from "../ui/Label.jsx";
+import DetailLayout from "../ui/detail/DetailLayout.jsx";
+import Accordion from "../ui/accordion/Accordion.jsx";
+import AccordionSection from "../ui/accordion/AccordionSection.jsx";
+import AccordionItem from "../ui/accordion/AccordionItem.jsx";
 import AddRackModal from "./AddRackModal.jsx";
 import { WrenchIcon, PlusIcon, PowerIcon, BanknotesIcon, Cog6ToothIcon, TrashIcon, BoltIcon } from "@heroicons/react/24/outline";
-import { changeRackPosition, data, removeRackById, requestMinerRepair } from "../data.js";
+import { changeRackPosition, data, removeRackById, requestMinerRepair } from "../../data.js";
 
 export default function RackDetailView({ title, onBack, rackSection, standalone = false, targetRackId = null }) {
   const racks = rackSection?.racks || [];
@@ -25,6 +25,12 @@ export default function RackDetailView({ title, onBack, rackSection, standalone 
       setSelectedRack(targetRack);
     }
   }, [standalone, targetRack, selectedRack]);
+
+  // sync add rack modal with data flag
+  useEffect(() => {
+    if (data.addRackModal && !rackModalOpen) setRackModalOpen(true);
+    if (!data.addRackModal && rackModalOpen && !rackSection?.addRackModal) setRackModalOpen(false);
+  }, [rackModalOpen, rackSection?.addRackModal]);
 
   const currentRack = selectedRack || targetRack || null;
 

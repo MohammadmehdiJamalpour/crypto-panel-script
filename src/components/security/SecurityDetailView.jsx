@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import Label from "./Label.jsx";
-import DetailLayout from "./DetailLayout.jsx";
-import Accordion from "./Accordion.jsx";
-import AccordionSection from "./AccordionSection.jsx";
-import AccordionItem from "./AccordionItem.jsx";
+import Label from "../ui/Label.jsx";
+import DetailLayout from "../ui/detail/DetailLayout.jsx";
+import Accordion from "../ui/accordion/Accordion.jsx";
+import AccordionSection from "../ui/accordion/AccordionSection.jsx";
+import AccordionItem from "../ui/accordion/AccordionItem.jsx";
 import AddCameraModal from "./AddCameraModal.jsx";
 import { ShieldCheckIcon, BoltIcon } from "@heroicons/react/24/outline";
-import { PlusIcon,CameraIcon } from "@heroicons/react/20/solid";
-import { data, installMotionSensors } from "../data.js";
+import { CameraIcon } from "@heroicons/react/20/solid";
+import { data, installMotionSensors } from "../../data.js";
 
 export default function SecurityDetailView({ title, onBack, security }) {
   const [motionStatus, setMotionStatus] = useState(security?.motionSensorStatus ?? "");
@@ -19,6 +19,12 @@ export default function SecurityDetailView({ title, onBack, security }) {
     setMotionStatus(security?.motionSensorStatus ?? "");
     setCameras(security?.securityCameras || []);
   }, [security?.motionSensorStatus, security?.securityCameras]);
+
+  // sync modal visibility with data flag in case it was toggled externally
+  useEffect(() => {
+    if (data.addCameraModal && !cameraModalOpen) setCameraModalOpen(true);
+    if (!data.addCameraModal && cameraModalOpen && !(security?.addNewCamera)) setCameraModalOpen(false);
+  }, [cameraModalOpen, security?.addNewCamera]);
 
   const motionText = useMemo(() => {
     const norm = (motionStatus || "").toLowerCase();

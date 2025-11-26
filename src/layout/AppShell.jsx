@@ -4,7 +4,7 @@ import Footer from "./Footer";
 import useDraggablePanel from "../utils/useDraggablePanel";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
-const moveIcon = "/move.svg";
+const moveIcon = "/move-icon.svg";
 
 function Panel({ children, user, profile, onClose }) {
   const scrollRef = useRef(null);

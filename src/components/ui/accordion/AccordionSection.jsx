@@ -1,6 +1,6 @@
 import React, { useCallback, useId, useMemo, useState } from "react";
 import AccordionItemsBody from "./AccordionItemsBody.jsx";
-import IconChip from "./atoms/IconChip";
+import IconChip from "../../atoms/IconChip.jsx";
 
 const SIZE_MAP = {
   sm: { pad: "px-3 py-3", title: "text-sm" },

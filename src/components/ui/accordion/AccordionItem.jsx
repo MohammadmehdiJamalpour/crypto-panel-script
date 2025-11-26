@@ -1,7 +1,7 @@
 import React, { forwardRef, useMemo } from "react";
-import RowShell from "./atoms/RowShell";
-import IconChip from "./atoms/IconChip";
-import TopGlow from "./atoms/TopGlow";
+import RowShell from "../../atoms/RowShell.jsx";
+import IconChip from "../../atoms/IconChip.jsx";
+import TopGlow from "../../atoms/TopGlow.jsx";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 
 const DEFAULT_HEIGHT = 55;

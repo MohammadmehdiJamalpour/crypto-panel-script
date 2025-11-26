@@ -1,11 +1,11 @@
 import React from "react";
-import Label from "../components/Label.jsx";
+import Label from "../components/ui/Label.jsx";
 
-import PowerDetailView from "../components/PowerDetailView.jsx";
-import RackDetailView from "../components/RackDetailView.jsx";
-import SecurityDetailView from "../components/SecurityDetailView.jsx";
-import WithdrawModal from "../components/WithdrawModal.jsx";
-import SetPasswordModal from "../components/SetPasswordModal.jsx";
+import PowerDetailView from "../components/power/PowerDetailView.jsx";
+import RackDetailView from "../components/rack/RackDetailView.jsx";
+import SecurityDetailView from "../components/security/SecurityDetailView.jsx";
+import WithdrawModal from "../components/finance/WithdrawModal.jsx";
+import SetPasswordModal from "../components/profile/SetPasswordModal.jsx";
 import { data, updateProfilePassword, submitWithdrawRequest } from "../data.js";
 import {
   PowerIcon,
@@ -14,12 +14,12 @@ import {
   BanknotesIcon,
   WrenchIcon,
   ShieldCheckIcon,
-  LockClosedIcon
+  LockClosedIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
-import Accordion from "../components/Accordion.jsx";
-import AccordionSection from "../components/AccordionSection.jsx";
-import AccordionItem from "../components/AccordionItem.jsx";
+import Accordion from "../components/ui/accordion/Accordion.jsx";
+import AccordionSection from "../components/ui/accordion/AccordionSection.jsx";
+import AccordionItem from "../components/ui/accordion/AccordionItem.jsx";
 
 export default function Body({ className = "" }) {
   const isStandalone = data.rackStandaloneMode;
@@ -36,16 +36,33 @@ export default function Body({ className = "" }) {
 
   const [activeItem, setActiveItem] = React.useState(initialItem);
   const [activeCoin, setActiveCoin] = React.useState(null);
-  const [passwordModalOpen, setPasswordModalOpen] = React.useState(!!data.setPasswordModal);
-  const [withdrawModalOpen, setWithdrawModalOpen] = React.useState(!!data.setWithdrawModal);
+  const [passwordModalOpen, setPasswordModalOpen] = React.useState(
+    !!data.setPasswordModal
+  );
+  const [withdrawModalOpen, setWithdrawModalOpen] = React.useState(
+    !!data.setWithdrawModal
+  );
 
   const handleOpenPassword = React.useCallback(() => {
     setPasswordModalOpen(true);
     data.setPasswordModal = true;
   }, []);
 
+  // Keep modal visibility in sync with data flags (in case they are toggled elsewhere)
+  React.useEffect(() => {
+    if (data.setPasswordModal && !passwordModalOpen) setPasswordModalOpen(true);
+    if (!data.setPasswordModal && passwordModalOpen)
+      setPasswordModalOpen(false);
+
+    if (data.setWithdrawModal && !withdrawModalOpen) setWithdrawModalOpen(true);
+    if (!data.setWithdrawModal && withdrawModalOpen)
+      setWithdrawModalOpen(false);
+  }, [passwordModalOpen, withdrawModalOpen]);
+
   return (
-    <section className={`relative flex-1 px-4 py-6 overflow-hidden ${className}`}>
+    <section
+      className={`relative flex-1 px-4 py-6 overflow-hidden ${className}`}
+    >
       {/* subtle background illustration for menu area */}
       <div
         aria-hidden
@@ -72,18 +89,7 @@ export default function Body({ className = "" }) {
             onOpenPassword={handleOpenPassword}
           />
         )}
-        <WithdrawModal
-          open={withdrawModalOpen && !!activeCoin}
-          coin={activeCoin}
-          onClose={() => {
-            setActiveCoin(null);
-            setWithdrawModalOpen(false);
-            data.setWithdrawModal = false;
-          }}
-          onSave={({ coin, address }) => {
-            return submitWithdrawRequest({ coin, address });
-          }}
-        />
+         
         <SetPasswordModal
           open={passwordModalOpen}
           onClose={() => {
@@ -110,7 +116,6 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
     Math.max(0, Math.round((currentPower / capacity) * 100))
   );
   const healthPct = Math.min(100, Math.max(0, data.overallHealthValue ?? 50));
-  const [withdrawOpen, setWithdrawOpen] = React.useState(false);
 
   const items = [
     {
@@ -118,6 +123,38 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
       icon: <PowerIcon className={`h-5 w-5 ${statusColor}`} />,
       label: <span className={statusColor}>Status</span>,
       value: <span className={statusColor}>{statusText}</span>,
+      chevron: false,
+    },
+
+    {
+      key: "powerUsage",
+      icon: <BoltIcon className="h-5 w-5 text-blue-200" />,
+      label: "Power Usage",
+      value: `[${currentPower}/${capacity}] KW/h`,
+      chevron: true,
+      progress: powerPct,
+      onClick: () => onOpen({ key: "powerUsage", title: "Power Usage" }),
+      onChevronClick: () => onOpen({ key: "powerUsage", title: "Power Usage" }),
+    },
+     {
+      key: "warehouseIp",
+      icon: <LinkIcon className="h-5 w-5 text-blue-200" />,
+      label: "Warehouse IP",
+      value: data.warehouseIp ?? "",
+      chevron: false,
+    },
+    {
+      key: "approxYield",
+      icon: <BanknotesIcon className="h-5 w-5  text-green-600" />,
+      label: "Approximate Yield",
+      value: data.approximateYield ?? "",
+      chevron: false,
+    },
+    {
+      key: "overallHealth",
+      icon: <WrenchIcon className="h-5 w-5 text-blue-200" />,
+      label: "Overall Miners Health",
+      progress: healthPct,
       chevron: false,
     },
     {
@@ -139,23 +176,6 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
         onOpen({ key: "security", title: "Security Measures" }),
     },
     {
-      key: "powerUsage",
-      icon: <BoltIcon className="h-5 w-5 text-blue-200" />,
-      label: "Power Usage",
-      value: `[${currentPower}/${capacity}] KW/h`,
-      chevron: true,
-      progress: powerPct,
-      onClick: () => onOpen({ key: "powerUsage", title: "Power Usage" }),
-      onChevronClick: () => onOpen({ key: "powerUsage", title: "Power Usage" }),
-    },
-    {
-      key: "overallHealth",
-      icon: <WrenchIcon className="h-5 w-5 text-blue-200" />,
-      label: "Overall Miners Health",
-      progress: healthPct,
-      chevron: false,
-    },
-    {
       key: "setPassword",
       icon: <ShieldCheckIcon className="h-5 w-5 text-red-500" />,
       label: "Set New Password",
@@ -163,20 +183,6 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
       onChevronClick: onOpenPassword,
     },
 
-    {
-      key: "warehouseIp",
-      icon: <LinkIcon className="h-5 w-5 text-blue-200" />,
-      label: "Warehouse IP",
-      value: data.warehouseIp ?? "",
-      chevron: false,
-    },
-    {
-      key: "approxYield",
-      icon: <BanknotesIcon className="h-5 w-5  text-green-600" />,
-      label: "Approximate Yield",
-      value: data.approximateYield ?? "",
-      chevron: false,
-    },
    
   ];
 
@@ -199,11 +205,18 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
 
   return (
     <div className="space-y-3">
-      <Label items={items} />
-      {withdrawOpen ? (
-        <Label className="pl-6" items={withdrawChildren} />
-      ) : null}
+      <Label
+        items={items.filter(
+          (it) => !["overallHealth", "rackControl", "security", "setPassword"].includes(it.key)
+        )}
+      />
+
       <CryptoAccordion onOpenCoin={onOpenCoin} />
+      <Label
+        items={items.filter((it) =>
+          ["overallHealth", "rackControl", "security", "setPassword"].includes(it.key)
+        )}
+      />
     </div>
   );
 }
