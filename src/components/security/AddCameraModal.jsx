@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Modal from "../Modal.jsx";
-import { addSecurityCamera } from "../../data.js";
+import { addSecurityCamera } from "../../services/security.js";
 
 export default function AddCameraModal({ open, onClose, onAdded }) {
   const [name, setName] = useState("");

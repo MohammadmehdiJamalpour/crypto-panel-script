@@ -8,7 +8,9 @@ import SecurityDetailView from "../components/security/SecurityDetailView.jsx";
 import InfoDetailView from "../components/info/InfoDetailView.jsx";
 import WithdrawModal from "../components/finance/WithdrawModal.jsx";
 import SetPasswordModal from "../components/profile/SetPasswordModal.jsx";
-import { data, updateProfilePassword, submitWithdrawRequest } from "../data.js";
+import { data } from "../data.js";
+import { updateProfilePassword } from "../services/auth.js";
+import { submitWithdrawRequest } from "../services/finance.js";
 import {
   PowerIcon,
   BoltIcon,

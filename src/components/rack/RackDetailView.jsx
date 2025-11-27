@@ -6,7 +6,8 @@ import AccordionSection from "../ui/accordion/AccordionSection.jsx";
 import AccordionItem from "../ui/accordion/AccordionItem.jsx";
 import AddRackModal from "./AddRackModal.jsx";
 import { WrenchIcon, PlusIcon, PowerIcon, BanknotesIcon, Cog6ToothIcon, TrashIcon, BoltIcon } from "@heroicons/react/24/outline";
-import { changeRackPosition, data, removeRackById, requestMinerRepair } from "../../data.js";
+import { data } from "../../data.js";
+import { changeRackPosition, removeRackById, requestMinerRepair } from "../../services/rack.js";
 import { scrollContainerToTop } from "../../utils/scroll.js";
 
 export default function RackDetailView({ title, onBack, rackSection, standalone = false, targetRackId = null }) {

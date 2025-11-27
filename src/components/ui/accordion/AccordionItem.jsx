@@ -41,8 +41,9 @@ const AccordionItem = forwardRef(function AccordionItem(
 ) {
   const padCls = padding ?? DEFAULT_PADDING;
   const borderCls = _open ? "border border-[color:var(--rail)]" : "border-0";
-  const asButton = typeof onClick === "function";
-  const Comp = asButton ? "button" : "div";
+  const clickable = typeof onClick === "function";
+  // Use div to avoid nested button issues when child chips are buttons; add role/tabIndex for accessibility.
+  const Comp = "div";
 
   const showStandard = label != null || leftIcon != null || rightIcon != null || chevron;
 
@@ -108,6 +109,8 @@ const AccordionItem = forwardRef(function AccordionItem(
     style: { height: DEFAULT_HEIGHT },
     className: [padCls, className].filter(Boolean).join(" "),
     "data-item": itemId || undefined,
+    role: clickable ? "button" : undefined,
+    tabIndex: clickable ? 0 : undefined,
   };
 
   if (!decorated) {

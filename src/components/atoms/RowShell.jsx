@@ -16,6 +16,8 @@ const RowShell = forwardRef(function RowShell(
         "hover:ring-white/30",
         className,
       ].filter(Boolean).join(" ")}
+      role={rest.role}
+      tabIndex={rest.tabIndex}
       {...rest}
     >
       {children}

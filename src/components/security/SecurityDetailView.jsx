@@ -7,7 +7,8 @@ import AccordionItem from "../ui/accordion/AccordionItem.jsx";
 import AddCameraModal from "./AddCameraModal.jsx";
 import { ShieldCheckIcon, BoltIcon } from "@heroicons/react/24/outline";
 import { CameraIcon } from "@heroicons/react/20/solid";
-import { data, installMotionSensors } from "../../data.js";
+import { data } from "../../data.js";
+import { installMotionSensors } from "../../services/security.js";
 
 export default function SecurityDetailView({ title, onBack, security }) {
   const [motionStatus, setMotionStatus] = useState(security?.motionSensorStatus ?? "");

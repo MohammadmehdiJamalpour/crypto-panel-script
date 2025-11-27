@@ -3,37 +3,33 @@ import AppShell from "./layout/AppShell.jsx";
 import Body from "./layout/Body.jsx";
 import { data } from "./data.js";
 import LoginModal from "./components/LoginModal.jsx";
+import { useLoginFlow } from "./services/auth.js";
 
 export default function App() {
-  const [loginModal, setLoginModal] = React.useState(!data.remoteAccessMode);
-  const [mainMenu, setMainMenu] = React.useState(!!data.remoteAccessMode);
   const [infoTrigger, setInfoTrigger] = React.useState(0);
-
-  const handleConfirm = async ({ host, password }) => {
-    const usernameOk = host === data.profile.username;
-    const passwordOk = password === data.profile.password;
-    if (!usernameOk || !passwordOk) {
-      throw new Error("Invalid username or password");
-    }
-    setLoginModal(false);
-    setMainMenu(true);
-  };
+  const {
+    loginModal,
+    mainMenu,
+    handleConfirm,
+    closeLogin,
+    setMainMenu,
+  } = useLoginFlow(data.profile, data.remoteAccessMode);
 
   return (
     <>
       {mainMenu ? (
         <AppShell
-        profile={data.profile}
-        onClose={() => setMainMenu(false)}
-        onInfo={() => setInfoTrigger((v) => v + 1)}
-      >
+          profile={data.profile}
+          onClose={() => setMainMenu(false)}
+          onInfo={() => setInfoTrigger((v) => v + 1)}
+        >
           <Body infoTrigger={infoTrigger} isRemote={data.remoteAccessMode} />
         </AppShell>
       ) : null}
 
       <LoginModal
         open={loginModal}
-        onClose={() => setLoginModal(false)}
+        onClose={closeLogin}
         onConfirm={handleConfirm}
         title="Login Required"
         hostLabel="Username"

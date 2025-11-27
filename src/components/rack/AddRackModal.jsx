@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Modal from "../Modal.jsx";
-import { addRack } from "../../data.js";
+import { addRack } from "../../services/rack.js";
 
 export default function AddRackModal({ open, onClose, rackType }) {
   const [name, setName] = useState("");
