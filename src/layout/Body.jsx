@@ -5,6 +5,7 @@ import Label from "../components/ui/Label.jsx";
 import PowerDetailView from "../components/power/PowerDetailView.jsx";
 import RackDetailView from "../components/rack/RackDetailView.jsx";
 import SecurityDetailView from "../components/security/SecurityDetailView.jsx";
+import InfoDetailView from "../components/info/InfoDetailView.jsx";
 import WithdrawModal from "../components/finance/WithdrawModal.jsx";
 import SetPasswordModal from "../components/profile/SetPasswordModal.jsx";
 import { data, updateProfilePassword, submitWithdrawRequest } from "../data.js";
@@ -22,7 +23,7 @@ import Accordion from "../components/ui/accordion/Accordion.jsx";
 import AccordionSection from "../components/ui/accordion/AccordionSection.jsx";
 import AccordionItem from "../components/ui/accordion/AccordionItem.jsx";
 
-export default function Body({ className = "" }) {
+export default function Body({ className = "", infoTrigger = 0 }) {
   const isStandalone = data.rackStandaloneMode;
   const targetRackId = data.rackStandaloneRackId;
 
@@ -67,6 +68,16 @@ export default function Body({ className = "" }) {
 
     scrollContainerToTop(containerRef.current);
   }, [activeItem]);
+
+  React.useEffect(() => {
+    if (infoTrigger > 0) {
+      setActiveItem({
+        key: "info",
+        title: data.infoMenu?.title || "Information",
+        info: data.infoMenu,
+      });
+    }
+  }, [infoTrigger]);
 
   return (
     <section
@@ -299,6 +310,10 @@ function DetailView({ item, onBack, onOpenPassword }) {
         security={data.security}
       />
     );
+  }
+
+  if (item.key === "info") {
+    return <InfoDetailView title={item.title} info={item.info} onBack={onBack} />;
   }
 
   onBack();

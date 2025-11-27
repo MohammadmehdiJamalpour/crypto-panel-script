@@ -7,6 +7,7 @@ import LoginModal from "./components/LoginModal.jsx";
 export default function App() {
   const [loginModal, setLoginModal] = React.useState(true);
   const [mainMenu, setMainMenu] = React.useState(false);
+  const [infoTrigger, setInfoTrigger] = React.useState(0);
 
   const handleConfirm = async ({ host, password }) => {
     const usernameOk = host === data.profile.username;
@@ -21,8 +22,12 @@ export default function App() {
   return (
     <>
       {mainMenu ? (
-        <AppShell profile={data.profile} onClose={() => setMainMenu(false)}>
-          <Body />
+        <AppShell
+          profile={data.profile}
+          onClose={() => setMainMenu(false)}
+          onInfo={() => setInfoTrigger((v) => v + 1)}
+        >
+          <Body infoTrigger={infoTrigger} />
         </AppShell>
       ) : null}
 

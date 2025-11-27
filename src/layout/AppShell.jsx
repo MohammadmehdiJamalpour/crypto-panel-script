@@ -2,11 +2,11 @@ import React, { useEffect, useRef } from "react";
 import AppHeader from "./AppHeader";
 import Footer from "./Footer";
 import useDraggablePanel from "../utils/useDraggablePanel";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 
 const moveIcon = "/move-icon.svg";
 
-function Panel({ children, user, profile, onClose }) {
+function Panel({ children, user, profile, onClose, onInfo }) {
   const scrollRef = useRef(null);
   const panelRef = useRef(null);
   const { offset, startDrag } = useDraggablePanel(panelRef);
@@ -44,6 +44,19 @@ function Panel({ children, user, profile, onClose }) {
           </button>
           <button
             type="button"
+            onClick={onInfo}
+            className="
+              grid place-items-center h-9 w-9
+              rounded-2xl bg-white/10 ring-1 ring-white/15 text-white
+              hover:bg-white/20 transition-colors
+              focus:outline-none focus:ring-2 focus:ring-blue-500/60
+            "
+            aria-label="Information"
+          >
+            <InformationCircleIcon className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
             onClick={onClose}
             className="
               grid place-items-center h-9 w-9
@@ -70,10 +83,14 @@ function Panel({ children, user, profile, onClose }) {
   );
 }
 
-export default function AppShell({ children, user, profile, onClose }) {
+export default function AppShell({ children, user, profile, onClose, onInfo }) {
+  const content = React.isValidElement(children)
+    ? React.cloneElement(children, { onInfo })
+    : children;
+
   return (
-    <Panel user={user} profile={profile} onClose={onClose}>
-      {children}
+    <Panel user={user} profile={profile} onClose={onClose} onInfo={onInfo}>
+      {content}
     </Panel>
   );
 }

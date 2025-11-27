@@ -11,6 +11,33 @@ export const data = {
   rackStandaloneMode: false,
   rackStandaloneRackId: "rack-a1",
   addRackModal: false,
+  infoMenu: {
+    title: "Information",
+    sections: [
+      {
+        title: "Overview",
+        items: [
+          "Control racks, security, and power usage from the main panel.",
+          "Open any label with a chevron to view details or perform actions.",
+        ],
+      },
+      {
+        title: "Navigation",
+        items: [
+          "Use the Racks menu for rack placement and per-rack health.",
+          "Use Security for motion sensors and cameras.",
+          "Use Power Usage to view status and set passwords.",
+        ],
+      },
+      {
+        title: "Actions",
+        items: [
+          "Withdraw funds via the Withdraw accordion in the main list.",
+          "Add racks/cameras and request repairs from their detail views.",
+        ],
+      },
+    ],
+  },
 
   // === Strings / basic app info ===
   warehouseIp: "192.168.0.10",
