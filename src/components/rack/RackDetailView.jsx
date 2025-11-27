@@ -15,6 +15,10 @@ export default function RackDetailView({ title, onBack, rackSection, standalone 
   const [selectedType, setSelectedType] = useState(rackSection?.selectedRackType || null);
   const [selectedRack, setSelectedRack] = useState(null);
   const containerRef = useRef(null);
+  const isRemote = data.remoteAccessMode;
+  const placeRackDisabled = isRemote && data.remoteLimitations?.restrictedActions?.includes("placeRack");
+  const removeRackDisabled = isRemote && data.remoteLimitations?.restrictedActions?.includes("removeRack");
+  const repairDisabled = isRemote && data.remoteLimitations?.restrictedActions?.includes("repairMiner");
 
   const targetRack = useMemo(
     () => (standalone && targetRackId ? racks.find((r) => r.rackId === targetRackId) || null : null),
@@ -80,34 +84,39 @@ export default function RackDetailView({ title, onBack, rackSection, standalone 
       ]
     : [];
 
-  const standaloneActions = standalone && currentRack
-    ? [
-        {
-          icon: <WrenchIcon className="h-4 w-4 text-blue-200" />,
-          label: "Change Rack Position",
-          chevron: true,
-          onClick: async () => {
-            await changeRackPosition({ rackId: currentRack.rackId });
+  const standaloneActions =
+    currentRack && !removeRackDisabled
+      ? [
+          ...(standalone
+            ? [
+                {
+                  icon: <WrenchIcon className="h-4 w-4 text-blue-200" />,
+                  label: "Change Rack Position",
+                  chevron: true,
+                  onClick: async () => {
+                    await changeRackPosition({ rackId: currentRack.rackId });
+                  },
+                  onChevronClick: async () => {
+                    await changeRackPosition({ rackId: currentRack.rackId });
+                  },
+                },
+              ]
+            : []),
+          {
+            icon: <TrashIcon className="h-4 w-4 text-red-300" />,
+            label: "Remove Rack",
+            chevron: true,
+            onClick: async () => {
+              await removeRackById(currentRack.rackId);
+              setSelectedRack(null);
+            },
+            onChevronClick: async () => {
+              await removeRackById(currentRack.rackId);
+              setSelectedRack(null);
+            },
           },
-          onChevronClick: async () => {
-            await changeRackPosition({ rackId: currentRack.rackId });
-          },
-        },
-        {
-          icon: <TrashIcon className="h-4 w-4 text-red-300" />,
-          label: "Remove Rack",
-          chevron: true,
-          onClick: async () => {
-            await removeRackById(currentRack.rackId);
-            setSelectedRack(null);
-          },
-          onChevronClick: async () => {
-            await removeRackById(currentRack.rackId);
-            setSelectedRack(null);
-          },
-        },
-      ]
-    : [];
+        ]
+      : [];
 
   const rackDetailLabels = currentRack ? [...baseDetailLabels, ...standaloneActions] : [];
 
@@ -152,41 +161,43 @@ export default function RackDetailView({ title, onBack, rackSection, standalone 
 
   return (
     <DetailLayout title={hasSelected ? currentRack.rackName : title} onBack={detailOnBack}>
-      <div ref={containerRef} className="relative min-h-[320px]">
+      <div ref={containerRef} className="relative min-h-[320px] pb-10">
         <div
           className={[
             "transition-all duration-300",
             hasSelected ? "opacity-0 -translate-x-4 pointer-events-none" : "opacity-100 translate-x-0",
           ].join(" ")}
         >
-          <Accordion className="space-y-2">
-            <AccordionSection
-              title="Place a new Rack"
-              icon={<WrenchIcon className="h-4 w-4 text-blue-200" />}
-              defaultOpen={false}
-              decorateChildrenByDefault
-            >
-              {(rackSection?.createRackOptions || []).map((opt) => (
-                <AccordionItem
-                  key={opt}
-                  label={opt}
-                  leftIcon={<PlusIcon className="h-4 w-4 text-blue-200" />}
-                  chevron
-                  onClick={() => {
-                    setSelectedType(opt);
-                    setRackModalOpen(true);
-                    data.addRackModal = true;
-                    data.rackSection.selectedRackType = opt;
-                  }}
-                  onChevronClick={() => {
-                    setSelectedType(opt);
-                    setRackModalOpen(true);
-                    data.addRackModal = true;
-                    data.rackSection.selectedRackType = opt;
-                  }}
-                />
-              ))}
-            </AccordionSection>
+            <Accordion className="space-y-2">
+            {placeRackDisabled ? null : (
+              <AccordionSection
+                title="Place a new Rack"
+                icon={<WrenchIcon className="h-4 w-4 text-blue-200" />}
+                defaultOpen={false}
+                decorateChildrenByDefault
+              >
+                {(rackSection?.createRackOptions || []).map((opt) => (
+                  <AccordionItem
+                    key={opt}
+                    label={opt}
+                    leftIcon={<PlusIcon className="h-4 w-4 text-blue-200" />}
+                    chevron
+                    onClick={() => {
+                      setSelectedType(opt);
+                      setRackModalOpen(true);
+                      data.addRackModal = true;
+                      data.rackSection.selectedRackType = opt;
+                    }}
+                    onChevronClick={() => {
+                      setSelectedType(opt);
+                      setRackModalOpen(true);
+                      data.addRackModal = true;
+                      data.rackSection.selectedRackType = opt;
+                    }}
+                  />
+                ))}
+              </AccordionSection>
+            )}
             <AccordionSection
               title="Placed Racks"
               icon={<WrenchIcon className="h-4 w-4 text-blue-200" />}
@@ -226,7 +237,7 @@ export default function RackDetailView({ title, onBack, rackSection, standalone 
           className={[
             "absolute inset-0 transition-all duration-300",
             hasSelected ? "opacity-100 translate-x-0" : "opacity-0 translate-x-4 pointer-events-none",
-          ].join(" ")}
+          ].join(" ") + " pb-10"}
         >
           {hasSelected ? (
             <>
@@ -240,8 +251,8 @@ export default function RackDetailView({ title, onBack, rackSection, standalone 
                     const pct = minerProgress(miner.minerHealth);
 
                     return (
-                      <AccordionSection
-                        key={miner.minerId}
+                    <AccordionSection
+                      key={miner.minerId}
                         title={
                           <div className="flex flex-col w-full gap-1">
                             <div className="flex items-center justify-between">
@@ -270,7 +281,7 @@ export default function RackDetailView({ title, onBack, rackSection, standalone 
                           value={miner.minerLastRepair ?? "--"}
                           leftIcon={<WrenchIcon className="h-4 w-4 text-blue-200" />}
                         />
-                        {pct < 100 ? (
+                        {pct < 100 && !repairDisabled ? (
                           <AccordionItem
                             label="Repair Needed"
                             leftIcon={<Cog6ToothIcon className="h-4 w-4 text-amber-300" />}

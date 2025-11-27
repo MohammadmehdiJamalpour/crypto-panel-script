@@ -12,7 +12,7 @@ function cx(...parts) {
 }
 
 const STACK_GAP = 8;
-const LEFT_PAD_BUFFER = 8;
+const LEFT_PAD_BUFFER = 0;
 
 /* measure stack geometry for rail & elbows */
 function useRailGeometry({ bodyRef, stackRef, itemRefs, deps = [] }) {
@@ -68,12 +68,13 @@ function useRailGeometry({ bodyRef, stackRef, itemRefs, deps = [] }) {
 function buildRailElements({ midYs, stackH, elbowLen, elbowRadius, railOffset, railStroke }) {
   const H = Math.max(stackH, 1);
   const R = elbowRadius;
+  const TAIL_TRIM = 8;
 
   let railEndY = H;
   if (midYs.length > 0) {
     const last = midYs[midYs.length - 1];
     const lastCy = Math.max(R, Math.min(H - R, last));
-    railEndY = Math.max(0, Math.min(H, lastCy));
+    railEndY = Math.max(0, Math.min(H - TAIL_TRIM, lastCy));
   }
 
   return (
@@ -148,7 +149,8 @@ export default function AccordionItemsBody({
 
   const overlayW = railOffset + elbowLen;
   const padLeft = overlayW + LEFT_PAD_BUFFER;
-  const overlayHeight = Math.max(stackH, 1);
+  const RAIL_TRIM = 8;
+  const overlayHeight = Math.max(stackH - RAIL_TRIM, 1);
 
   const railElements = useMemo(
     () =>

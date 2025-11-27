@@ -41,11 +41,12 @@ function InlineLabelRow({
   onClick,
   className = "",
   as,
+  disabled = false,
 }) {
   const pad = compact ? DEFAULT_PAD.compact : DEFAULT_PAD.roomy;
   const heightCls = autoHeight ? "" : "h-14";
   const Component = as ?? "div";
-  const clickable = typeof onClick === "function";
+  const clickable = typeof onClick === "function" && !disabled;
 
   const handleIconClick = useCallback(
     (e) => {
@@ -77,8 +78,9 @@ function InlineLabelRow({
     BASE_SHELL,
     heightCls,
     pad,
-    hoverable && HOVER_BG,
+    hoverable && !disabled && HOVER_BG,
     clickable && "cursor-pointer",
+    disabled && "opacity-60 cursor-not-allowed",
     className
   );
 

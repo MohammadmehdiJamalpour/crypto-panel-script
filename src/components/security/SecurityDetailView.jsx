@@ -36,6 +36,9 @@ export default function SecurityDetailView({ title, onBack, security }) {
   const normStatus = (motionStatus || "").toLowerCase();
   const showInstall = normStatus === "inactive" || !normStatus || normStatus === "notinstalled";
   const motionColor = normStatus === "active" ? "text-emerald-300" : "text-red-300";
+  const isRemote = data.remoteAccessMode;
+  const installDisabled = isRemote && data.remoteLimitations?.restrictedActions?.includes("installMotionSensors");
+  const addCameraDisabled = isRemote && data.remoteLimitations?.restrictedActions?.includes("addCamera");
 
   return (
     <DetailLayout title={title} onBack={onBack}>
@@ -46,12 +49,11 @@ export default function SecurityDetailView({ title, onBack, security }) {
             label: <span>Motion Sensors</span>,
             value: <span className={motionColor}>{motionText}</span>,
           },
-          ...(showInstall
+          ...(showInstall && !installDisabled
             ? [
                 {
                   icon: <BoltIcon className="h-4 w-4 text-blue-200" />,
                   label: "Install motion sensor to detect break in",
-            
                   onClick: async () => {
                     await installMotionSensors();
                     setMotionStatus("active");
@@ -76,21 +78,23 @@ export default function SecurityDetailView({ title, onBack, security }) {
           defaultOpen={false}
           decorateChildrenByDefault
         >
-          <AccordionItem
-            label="Add new camera"
-            leftIcon={<CameraIcon className="h-4 w-4 text-blue-200" />}
-            chevron
-            onClick={() => {
-              setCameraModalOpen(true);
-              data.addCameraModal = true;
-              if (security) security.addNewCamera = true;
-            }}
-            onChevronClick={() => {
-              setCameraModalOpen(true);
-              data.addCameraModal = true;
-              if (security) security.addNewCamera = true;
-            }}
-          />
+          {addCameraDisabled ? null : (
+            <AccordionItem
+              label="Add new camera"
+              leftIcon={<CameraIcon className="h-4 w-4 text-blue-200" />}
+              chevron
+              onClick={() => {
+                setCameraModalOpen(true);
+                data.addCameraModal = true;
+                if (security) security.addNewCamera = true;
+              }}
+              onChevronClick={() => {
+                setCameraModalOpen(true);
+                data.addCameraModal = true;
+                if (security) security.addNewCamera = true;
+              }}
+            />
+          )}
           {cameras.map((cam) => (
             <AccordionItem
               key={cam.cameraId}

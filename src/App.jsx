@@ -5,8 +5,8 @@ import { data } from "./data.js";
 import LoginModal from "./components/LoginModal.jsx";
 
 export default function App() {
-  const [loginModal, setLoginModal] = React.useState(true);
-  const [mainMenu, setMainMenu] = React.useState(false);
+  const [loginModal, setLoginModal] = React.useState(!data.remoteAccessMode);
+  const [mainMenu, setMainMenu] = React.useState(!!data.remoteAccessMode);
   const [infoTrigger, setInfoTrigger] = React.useState(0);
 
   const handleConfirm = async ({ host, password }) => {
@@ -23,11 +23,11 @@ export default function App() {
     <>
       {mainMenu ? (
         <AppShell
-          profile={data.profile}
-          onClose={() => setMainMenu(false)}
-          onInfo={() => setInfoTrigger((v) => v + 1)}
-        >
-          <Body infoTrigger={infoTrigger} />
+        profile={data.profile}
+        onClose={() => setMainMenu(false)}
+        onInfo={() => setInfoTrigger((v) => v + 1)}
+      >
+          <Body infoTrigger={infoTrigger} isRemote={data.remoteAccessMode} />
         </AppShell>
       ) : null}
 

@@ -11,6 +11,18 @@ export const data = {
   rackStandaloneMode: false,
   rackStandaloneRackId: "rack-a1",
   addRackModal: false,
+  remoteAccessMode: false, // if true, app opens directly in main menu with remote limitations
+  remoteLimitations: {
+    note: "Remote sessions may restrict destructive actions.",
+    restrictedActions: [
+      "removeRack",
+      "changeRackPosition",
+      "installMotionSensors",
+      "addCamera",
+      "placeRack",
+      "repairMiner",
+    ],
+  },
   infoMenu: {
     title: "Information",
     sections: [

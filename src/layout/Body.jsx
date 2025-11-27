@@ -23,7 +23,7 @@ import Accordion from "../components/ui/accordion/Accordion.jsx";
 import AccordionSection from "../components/ui/accordion/AccordionSection.jsx";
 import AccordionItem from "../components/ui/accordion/AccordionItem.jsx";
 
-export default function Body({ className = "", infoTrigger = 0 }) {
+export default function Body({ className = "", infoTrigger = 0, isRemote = false }) {
   const isStandalone = data.rackStandaloneMode;
   const targetRackId = data.rackStandaloneRackId;
 
@@ -37,6 +37,7 @@ export default function Body({ className = "", infoTrigger = 0 }) {
     : null;
 
   const [activeItem, setActiveItem] = React.useState(initialItem);
+  const [prevItem, setPrevItem] = React.useState(null);
   const [activeCoin, setActiveCoin] = React.useState(null);
   const [passwordModalOpen, setPasswordModalOpen] = React.useState(
     !!data.setPasswordModal
@@ -71,6 +72,7 @@ export default function Body({ className = "", infoTrigger = 0 }) {
 
   React.useEffect(() => {
     if (infoTrigger > 0) {
+      setPrevItem(activeItem || initialItem);
       setActiveItem({
         key: "info",
         title: data.infoMenu?.title || "Information",
@@ -78,6 +80,18 @@ export default function Body({ className = "", infoTrigger = 0 }) {
       });
     }
   }, [infoTrigger]);
+
+  const handleBack = React.useCallback(() => {
+    if (activeItem?.key === "info" && prevItem) {
+      setActiveItem(prevItem);
+      return;
+    }
+    if (isStandalone) {
+      setActiveItem(initialItem);
+      return;
+    }
+    setActiveItem(null);
+  }, [activeItem?.key, initialItem, isStandalone, prevItem]);
 
   return (
     <section
@@ -110,6 +124,7 @@ export default function Body({ className = "", infoTrigger = 0 }) {
                 data.setWithdrawModal = true;
               }}
               onOpenPassword={handleOpenPassword}
+              isRemote={isRemote}
             />
           </div>
 
@@ -124,7 +139,7 @@ export default function Body({ className = "", infoTrigger = 0 }) {
             {activeItem ? (
               <DetailView
                 item={activeItem}
-                onBack={isStandalone ? undefined : () => setActiveItem(null)}
+                onBack={handleBack}
                 onOpenPassword={handleOpenPassword}
               />
             ) : null}
@@ -146,7 +161,7 @@ export default function Body({ className = "", infoTrigger = 0 }) {
   );
 }
 
-function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
+function MainList({ onOpen, onOpenCoin, onOpenPassword, isRemote = false }) {
   const statusIsOnline = data.status?.toLowerCase?.() === "online";
   const statusText = statusIsOnline ? "Online" : "Offline";
   const statusColor = statusIsOnline ? "text-emerald-300" : "text-red-300";
@@ -206,6 +221,7 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
       onClick: () => onOpen({ key: "rackControl", title: "Rack Control Menu" }),
       onChevronClick: () =>
         onOpen({ key: "rackControl", title: "Rack Control Menu" }),
+      disabled: isRemote && data.remoteLimitations?.restrictedActions?.includes("rackControl"),
     },
     {
       key: "security",
@@ -215,6 +231,7 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
       onClick: () => onOpen({ key: "security", title: "Security Measures" }),
       onChevronClick: () =>
         onOpen({ key: "security", title: "Security Measures" }),
+      disabled: isRemote && data.remoteLimitations?.restrictedActions?.includes("security"),
     },
     {
       key: "setPassword",
@@ -243,7 +260,7 @@ function MainList({ onOpen, onOpenCoin, onOpenPassword }) {
   ];
 
   return (
-    <div className="">
+    <div className="pb-10">
       <Label
         items={items.filter(
           (it) =>
@@ -313,7 +330,13 @@ function DetailView({ item, onBack, onOpenPassword }) {
   }
 
   if (item.key === "info") {
-    return <InfoDetailView title={item.title} info={item.info} onBack={onBack} />;
+    return (
+      <InfoDetailView
+        title={item.title}
+        info={item.info}
+        onBack={onBack}
+      />
+    );
   }
 
   onBack();
