@@ -5,10 +5,10 @@ import Accordion from "../ui/accordion/Accordion.jsx";
 import AccordionSection from "../ui/accordion/AccordionSection.jsx";
 import AccordionItem from "../ui/accordion/AccordionItem.jsx";
 import AddCameraModal from "./AddCameraModal.jsx";
-import { ShieldCheckIcon, BoltIcon } from "@heroicons/react/24/outline";
+import { ShieldCheckIcon, BoltIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { CameraIcon } from "@heroicons/react/20/solid";
 import { data } from "../../data.js";
-import { installMotionSensors } from "../../services/security.js";
+import { installMotionSensors, removeSecurityCamera } from "../../services/security.js";
 
 export default function SecurityDetailView({ title, onBack, security }) {
   const [motionStatus, setMotionStatus] = useState(security?.motionSensorStatus ?? "");
@@ -40,6 +40,20 @@ export default function SecurityDetailView({ title, onBack, security }) {
   const isRemote = data.remoteAccessMode;
   const installDisabled = isRemote && data.remoteLimitations?.restrictedActions?.includes("installMotionSensors");
   const addCameraDisabled = isRemote && data.remoteLimitations?.restrictedActions?.includes("addCamera");
+  const removeCameraDisabled = isRemote && data.remoteLimitations?.restrictedActions?.includes("removeCamera");
+
+  const handleRemoveCamera = React.useCallback(
+    async (cameraId) => {
+      if (!cameraId || removeCameraDisabled) return;
+      await removeSecurityCamera(cameraId);
+      setCameras((prev) => {
+        const next = prev.filter((cam) => cam.cameraId !== cameraId);
+        if (security) security.securityCameras = next;
+        return next;
+      });
+    },
+    [removeCameraDisabled, security]
+  );
 
   return (
     <DetailLayout title={title} onBack={onBack}>
@@ -73,6 +87,32 @@ export default function SecurityDetailView({ title, onBack, security }) {
       />
 
       <Accordion className="space-y-2">
+        <AccordionSection
+          title="Remove Cameras"
+          icon={<TrashIcon className="h-4 w-4 text-red-300" />}
+          defaultOpen={false}
+          decorateChildrenByDefault
+          accentColor="rgb(248 113 113 / 0.35)"
+        >
+          {cameras.length === 0 ? (
+            <AccordionItem
+              label="No cameras available"
+              leftIcon={<CameraIcon className="h-4 w-4 text-blue-200" />}
+            />
+          ) : (
+            cameras.map((cam) => (
+              <AccordionItem
+                key={`remove-${cam.cameraId}`}
+                label={cam.cameraId}
+                value={cam.cameraName}
+                leftIcon={<CameraIcon className="h-4 w-4 text-blue-200" />}
+                rightIcon={<TrashIcon className="h-4 w-4 text-red-300" />}
+                onRightIconClick={() => handleRemoveCamera(cam.cameraId)}
+              />
+            ))
+          )}
+        </AccordionSection>
+
         <AccordionSection
           title="Security Cameras"
           icon={<CameraIcon className="h-4 w-4 text-blue-200" />}

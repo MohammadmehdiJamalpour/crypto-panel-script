@@ -17,6 +17,15 @@ export async function addSecurityCamera(name) {
   return Promise.resolve();
 }
 
+// Async helper to remove a security camera; replace with real fetch/API later
+export async function removeSecurityCamera(cameraId) {
+  if (!cameraId) return Promise.resolve();
+  data.security.securityCameras = (data.security.securityCameras || []).filter(
+    (cam) => cam.cameraId !== cameraId
+  );
+  return Promise.resolve();
+}
+
 // Hook to manage watching a camera when a list item is clicked.
 // Returns current camera and a handler you can attach to onClick/onChevronClick.
 export function useWatchCamera(initialCamera = null) {

@@ -158,6 +158,16 @@ export default function Body({ className = "", infoTrigger = 0, isRemote = false
             return updateProfilePassword(pwd);
           }}
         />
+        <WithdrawModal
+          open={withdrawModalOpen && !!activeCoin}
+          coin={activeCoin}
+          onClose={() => {
+            setActiveCoin(null);
+            setWithdrawModalOpen(false);
+            data.setWithdrawModal = false;
+          }}
+          onSave={({ coin, address }) => submitWithdrawRequest({ coin, address })}
+        />
       </div>
     </section>
   );

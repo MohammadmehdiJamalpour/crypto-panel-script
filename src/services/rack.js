@@ -3,7 +3,9 @@ import { data } from "../data.js";
 // Async helper to add a rack; replace with real fetch/API later
 export async function addRack({ type, name }) {
   // TODO: replace with API call (e.g., POST /api/racks)
-  const nextId = `rack-${(data.rackSection.racks.length + 1).toString().padStart(2, "0")}`;
+  const nextId = `rack-${(data.rackSection.racks.length + 1)
+    .toString()
+    .padStart(2, "0")}`;
   data.rackSection.racks.push({
     rackId: nextId,
     rackName: name || `Rack ${nextId}`,
@@ -43,6 +45,8 @@ export async function changeRackPosition({ rackId, row, column }) {
 // Async helper to remove a rack; replace with real fetch/API later
 export async function removeRackById(rackId) {
   // TODO: replace with API call (e.g., DELETE /api/racks/:id)
-  data.rackSection.racks = data.rackSection.racks.filter((r) => r.rackId !== rackId);
+  data.rackSection.racks = data.rackSection.racks.filter(
+    (r) => r.rackId !== rackId
+  );
   return Promise.resolve();
 }
